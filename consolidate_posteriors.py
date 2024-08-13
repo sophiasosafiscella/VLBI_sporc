@@ -16,8 +16,8 @@ for i, file in enumerate(posterior_files):
     aux = np.load(file)
     res_np[i, :] = aux[1:]
     idx_np[i] = aux[0]
-    os.remove(file)
+#    os.remove(file)
 
 # Save the results to a DataFrame
-result_df = pd.DataFrame(data=res_np, index=idx_np, columns=["PMRA", "PMDEC", "PX"])
-result_df.to_pickle(f"./results/{PSR_name}/{PSR_name}_timing_posteriors.pkl")
+result_df = pd.DataFrame(data=res_np, index=idx_np, columns=["PMRA", "PMDEC", "PX"]).sort_index()
+result_df.to_pickle(f"./results/timing_posteriors/{PSR_name}_timing_posteriors.pkl")
