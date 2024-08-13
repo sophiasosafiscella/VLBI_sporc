@@ -104,6 +104,8 @@ def calculate_posteriors(PSR_name: str, timing_solution, timfile: str, eq_timing
     return
 
 if __name__ == "__main__":
+    print(sys.argv)
+    sys.exit()
     PSR_name, idx, PMRA, PMDEC, PX = sys.argv[1:]  # Timing solution index and parameters
 
     posteriors_dir: str = f"./results/timing_posteriors/{PSR_name}"

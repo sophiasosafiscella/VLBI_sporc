@@ -2,6 +2,7 @@
 
 # Specify the path to the config file
 config=./results/$1_overlap.txt
+PSR_name="$1"
 n_lines=$(wc -l < $config)
 n_lines=$((n_lines - 2))
 
