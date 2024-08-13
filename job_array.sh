@@ -39,6 +39,3 @@ EOF
 
 # Submit the job
 sbatch job_script.sh
-
-# Consolidate the posterior files
-srun python3 -u consolidate_posteriors.py \${PSR_name}

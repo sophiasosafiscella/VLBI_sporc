@@ -104,12 +104,11 @@ def calculate_posteriors(PSR_name: str, timing_solution, timfile: str, eq_timing
     return
 
 if __name__ == "__main__":
-    print(sys.argv)
-    sys.exit()
     PSR_name, idx, PMRA, PMDEC, PX = sys.argv[1:]  # Timing solution index and parameters
 
     posteriors_dir: str = f"./results/timing_posteriors/{PSR_name}"
 
-    res_df = pd.DataFrame({'PMRA': [PMRA], 'PMDEC': [PMDEC],
-                           'PX': [PX], 'idx': [idx]})
-    res_df.to_pickle(posteriors_dir + "/" + str(idx) + "_posterior.pkl")
+#    res_df = pd.DataFrame({'PMRA': [PMRA], 'PMDEC': [PMDEC],'PX': [PX], 'idx': [idx]})
+#    res_df.to_pickle(posteriors_dir + "/" + str(idx) + "_posterior.pkl")
+    res_np = np.asarray([idx, PMRA, PMDEC, PX])
+    np.save(posteriors_dir + "/" + str(idx) + "_posterior.npy", res_np)
