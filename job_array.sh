@@ -29,9 +29,11 @@ PMDEC=\$(awk -v ArrayTaskID=\${SLURM_ARRAY_TASK_ID} '\$1==ArrayTaskID {print \$3
 # Extract the PX for the current SLURM_ARRAY_TASK_ID
 PX=\$(awk -v ArrayTaskID=\${SLURM_ARRAY_TASK_ID} '\$1==ArrayTaskID {print \$4}' $config)
 
-echo "\${SLURM_ARRAY_TASK_ID}, PMRA = \${PMRA}, PMDEC = \${PMDEC}, PX \${PX}." >> output.txt
+PSR_name="${PSR_name}"  # Correctly pass the variable into the script
 
-srun python3 -u calculate_posterior.py \$1 \${SLURM_ARRAY_TASK_ID} \${PMRA} \${PMDEC} \${PX}
+echo "\${PSR_name}, \${SLURM_ARRAY_TASK_ID}, PMRA = \${PMRA}, PMDEC = \${PMDEC}, PX \${PX}." >> output.txt
+
+srun python3 -u calculate_posterior.py \${PSR_name} \${SLURM_ARRAY_TASK_ID} \${PMRA} \${PMDEC} \${PX}
 
 EOF
 
