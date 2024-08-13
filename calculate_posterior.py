@@ -16,16 +16,20 @@ from pint_pal import noise_utils
 import astropy.units as u
 
 from VLBI_utils import calculate_prior, replace_params
+from glob import glob
 
 
-
-def calculate_posteriors(PSR_name: str, timing_solution, timfile: str, eq_timing_model, VLBI_data, posteriors_dir, plot=False):
+def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, astrometric_data_file, plot=False):
     sns.set_theme(context="paper", style="darkgrid", font_scale=1.5)
 
     print(f"Processing iteration {timing_solution.Index} of {PSR_name}")
 
     # Load the TOAs
     toas = get_TOAs(timfile, planets=True)
+
+    # Load the timing model and convert to equatorial coordinates
+    ec_timing_model = get_model(parfile)  # Ecliptical coordiantes
+    eq_timing_model = ec_timing_model.as_ICRS(epoch=ec_timing_model.POSEPOCH.value)
 
     # Plot the original timing residuals
     if plot:
@@ -73,16 +77,16 @@ def calculate_posteriors(PSR_name: str, timing_solution, timfile: str, eq_timing
         print("Done!")
 
         # Calculate the posterior for this model and TOAs
-        posterior = calculate_prior(eq_timing_model, VLBI_data, PSR_name) * final_fit_resids.lnlikelihood()
+        posterior = calculate_prior(eq_timing_model, astrometric_data_file, PSR_name) * final_fit_resids.lnlikelihood()
 
     except LinAlgError:
         print(f"LinAlgError at iteration {timing_solution.Index}")
         posterior = [[0.0]]
 
     # Output the results
-    res_df = pd.DataFrame({'PMRA': [timing_solution.PMRA], 'PMDEC': [timing_solution.PMDEC],
-                           'PX': [timing_solution.PX], 'posterior': [posterior[0][0]]})
-    res_df.to_pickle(posteriors_dir + "/" + str(timing_solution.Index) + "_posterior.pkl")
+#    res_df = pd.DataFrame({'PMRA': [timing_solution.PMRA], 'PMDEC': [timing_solution.PMDEC],
+#                           'PX': [timing_solution.PX], 'posterior': [posterior[0][0]]})
+#    res_df.to_pickle(posteriors_dir + "/" + str(timing_solution.Index) + "_posterior.pkl")
 
     # Let's plot the residuals and compare
     if plot:
@@ -101,14 +105,27 @@ def calculate_posteriors(PSR_name: str, timing_solution, timfile: str, eq_timing
         plt.savefig("./figures/residuals/" + PSR_name + "_" + str(timing_solution.Index) + "_post.png")
         plt.show()
 
-    return
+    return posterior
+
 
 if __name__ == "__main__":
     PSR_name, idx, PMRA, PMDEC, PX = sys.argv[1:]  # Timing solution index and parameters
 
-    posteriors_dir: str = f"./results/timing_posteriors/{PSR_name}"
+    timing_solution_dict = {"Index": idx, "PMRA": PMRA, "PMDEC": PMDEC, "PX": PX}
+    for t in pd.DataFrame(timing_solution_dict, columns=list(timing_solution_dict.keys())[1:], index=[timing_solution_dict['Index']]).itertuples(index=True):
+        timing_solution = t
 
-#    res_df = pd.DataFrame({'PMRA': [PMRA], 'PMDEC': [PMDEC],'PX': [PX], 'idx': [idx]})
-#    res_df.to_pickle(posteriors_dir + "/" + str(idx) + "_posterior.pkl")
-    res_np = np.asarray([idx, PMRA, PMDEC, PX])
+    posteriors_dir: str = f"./results/timing_posteriors/{PSR_name}"
+    astrometric_data_file: str = "./data/astrometric_values.csv"
+
+    # Names of the .tim and .par files
+    timfile: str = glob.glob(f"./data/NG_15yr_dataset/tim/{PSR_name}*tim")[0]
+    parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}*par")[0]
+
+
+    # Calculate the posterior
+    posterior = calculate_post(PSR_name, timing_solution, timfile, parfile, astrometric_data_file)
+
+    # Save the timing solution with its posterior
+    res_np = np.asarray([idx, PMRA, PMDEC, PX, posterior])
     np.save(posteriors_dir + "/" + str(idx) + "_posterior.npy", res_np)

@@ -1,5 +1,6 @@
 import astropy.units as u
 import numpy as np
+import pandas as pd
 import scipy
 from astropy.coordinates import Angle
 from pandas.core.frame import pandas
@@ -88,7 +89,9 @@ def draw_samples(x0, uL, uR, size=1000):
     return samples
 
 
-def calculate_prior(timing_model, VLBI_data, PSR_name: str) -> float:
+def calculate_prior(timing_model, VLBI_data_file, PSR_name: str) -> float:
+    VLBI_data = pd.read_csv(VLBI_data_file, index_col=0)
+
     # ------------------------------Parallax------------------------------
     PX_prior = pdf_value(x=timing_model.PX.quantity.value, x0=VLBI_data.loc[PSR_name, "VLBI_PX"],
                          uL=VLBI_data.loc[PSR_name, "VLBI_PX_uL"], uR=VLBI_data.loc[PSR_name, "VLBI_PX_uR"])
