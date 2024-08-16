@@ -33,6 +33,9 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, a
 
     print("Successfully converted from ecliptical to equatorial")
 
+    # Replace the timing parameter values in the model with those from the new timing solution
+    eq_timing_model = replace_params(eq_timing_model, timing_solution)
+
     # Perform initial fit
     initial_fit = pint.fitter.DownhillGLSFitter(toas, eq_timing_model)
     try:
