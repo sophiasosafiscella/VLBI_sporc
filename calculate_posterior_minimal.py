@@ -32,6 +32,15 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, a
     eq_timing_model = ec_timing_model.as_ICRS(epoch=ec_timing_model.POSEPOCH.value)
 
     print("Successfully converted from ecliptical to equatorial")
+
+    # Perform initial fit
+    initial_fit = pint.fitter.DownhillGLSFitter(toas, eq_timing_model)
+    try:
+        initial_fit.fit_toas(maxiter=5)
+    except LinAlgError:
+        print(f"LinAlgError at iteration {timing_solution.Index}")
+
+    print("Successfully performed the initial fit")
     return
 
 if __name__ == "__main__":
