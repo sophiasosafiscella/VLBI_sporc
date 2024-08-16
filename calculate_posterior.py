@@ -2,7 +2,7 @@ import sys
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from scipy.linalg.misc import LinAlgError
+from scipy.linalg import LinAlgError
 
 import numpy as np
 import pandas as pd
@@ -16,7 +16,7 @@ from pint_pal import noise_utils
 import astropy.units as u
 
 from VLBI_utils import calculate_prior, replace_params
-from glob import glob
+import glob
 
 
 def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, astrometric_data_file, plot=False):
@@ -111,6 +111,12 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, a
 if __name__ == "__main__":
     PSR_name, idx, PMRA, PMDEC, PX = sys.argv[1:]  # Timing solution index and parameters
 
+    import astropy
+    import pint
+
+    print(astropy.__version__)
+    print(pint.__version__)
+
     timing_solution_dict = {"Index": idx, "PMRA": PMRA, "PMDEC": PMDEC, "PX": PX}
     for t in pd.DataFrame(timing_solution_dict, columns=list(timing_solution_dict.keys())[1:], index=[timing_solution_dict['Index']]).itertuples(index=True):
         timing_solution = t
@@ -121,7 +127,6 @@ if __name__ == "__main__":
     # Names of the .tim and .par files
     timfile: str = glob.glob(f"./data/NG_15yr_dataset/tim/{PSR_name}*tim")[0]
     parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}*par")[0]
-
 
     # Calculate the posterior
     posterior = calculate_post(PSR_name, timing_solution, timfile, parfile, astrometric_data_file)

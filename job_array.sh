@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -l
 
 # Specify the path to the config file
 config=./results/$1_overlap.txt
@@ -13,12 +13,16 @@ cat <<EOF > job_script.sh
 #SBATCH --job-name=VLBI         # Name of your job
 #SBATCH --account=vlbi          # Your Slurm account
 #SBATCH --partition=debug       # Run on tier3
-#SBATCH --output=%x_%j.out      # Output file
-#SBATCH --error=%x_%j.err       # Error file
-#SBATCH --time=0-00:10:00       # 10 minute time limit
+#SBATCH --output=%x_%A_%a.out      # Output file
+#SBATCH --error=%x_%A_%a.err       # Error file
+#SBATCH --time=0-01:00:00       # 10 minute time limit
 #SBATCH --ntasks=1              # 1 tasks (i.e. processes)
 #SBATCH --mem-per-cpu=1g        # 1GB RAM per CPU
 #SBATCH --array=0-${n_lines}    # Array size
+
+conda init bash
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate VLBI
 
 # Extract the PMRA for the current SLURM_ARRAY_TASK_ID
 PMRA=\$(awk -v ArrayTaskID=\${SLURM_ARRAY_TASK_ID} '\$1==ArrayTaskID {print \$2}' $config)
