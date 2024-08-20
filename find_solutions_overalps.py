@@ -18,7 +18,6 @@ from itertools import product
 import math
 
 import glob
-import sys
 
 
 def circle(radius, center):
