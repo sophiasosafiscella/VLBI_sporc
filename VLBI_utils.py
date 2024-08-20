@@ -7,7 +7,7 @@ from pandas.core.frame import pandas
 from pint.models.timing_model import TimingModel
 from scipy.stats import norm, skewnorm
 from uncertainties import ufloat, umath
-
+import sys
 
 def parSkewNormal(x0, uL, uR, pX=0.5, pL=0.025, pR=0.975, wX=1, wL=1, wR=1):
     ## INPUTS
@@ -132,15 +132,15 @@ def replace_params(timing_model: TimingModel, timing_solution: pandas) -> Timing
     # or
     # {'pulsar name': (parameter value, )} for parameters that can't be fit
     params = {
-        "PMRA": (timing_solution.PMRA * u.mas / u.yr, 1, 0.0 * u.mas / u.yr),
-        "PMDEC": (timing_solution.PMDEC * u.mas / u.yr, 1, 0.0 * u.mas / u.yr),
-        "PX": (timing_solution.PX * u.mas, 1, 0.0 * u.mas)
+        "PMRA": (timing_solution.PMRA, 1, 0.0 * u.mas / u.yr),
+        "PMDEC": (timing_solution.PMDEC, 1, 0.0 * u.mas / u.yr),
+        "PX": (timing_solution.PX, 1, 0.0 * u.mas)
     }
 
     # Assign the new parameters
     for name, info in params.items():
         par = getattr(timing_model, name)  # Get parameter object from name
-        par.quantity = info[0]  # set parameter value
+        par.value = info[0]  # set parameter value
         if len(info) > 1:
             if info[1] == 1:
                 par.frozen = True  # Frozen means not fit.
