@@ -4,13 +4,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.graph_objects as go
 
-from scipy.stats import norm
-from pint import models
+from astropy.coordinates import Angle
 
-from astropy.coordinates import Angle, Longitude, Latitude, SkyCoord, FK5, ICRS, BarycentricMeanEcliptic, \
-    BarycentricTrueEcliptic, Galactic, BaseEclipticFrame
-from astropy.time import Time
-import astropy.units as u
+from pint.models import get_model
+
 from VLBI_utils import pdf_value, plot_pdf
 
 from shapely import Point, buffer, prepare, contains_properly
@@ -201,4 +198,28 @@ def find_overlap(PSR_name, data, eq_timing_model, overlap_file):
 
     return
 
+if __name__ == "__main__":
 
+    # File containing the timing and VLBI astrometric data
+    astrometric_data = pd.read_csv("./data/astrometric_values.csv", index_col=0)
+    PSR_list = astrometric_data.index     # List of pulsars
+
+    # Iterate over the pulsars
+    for PSR_name in PSR_list[0:1]:
+
+        # Names of the .tim and .par files
+        timfile: str = glob.glob(f"./data/NG_15yr_dataset/tim/{PSR_name}*tim")[0]
+        parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}*par")[0]
+
+        # Load the timing model and convert to equatorial coordinates
+        ec_timing_model = get_model(parfile)  # Ecliptical coordiantes
+        eq_timing_model = ec_timing_model.as_ICRS(epoch=ec_timing_model.POSEPOCH.value)
+
+        # --------------------------------------------------------------------------------------------------------------
+        # 1) FIND THE OVERLAP BETWEEN THE TIMING AND VLBI SOLUTIONS
+        # --------------------------------------------------------------------------------------------------------------
+
+        # Name of the DataFrame containing the overlap between the timing and VLBI solutions
+        overlap_file: str = f"./results/{PSR_name}_overlap.txt"
+
+        find_overlap(PSR_name, astrometric_data, eq_timing_model, overlap_file)
