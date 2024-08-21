@@ -31,8 +31,8 @@ def find_overlap(PSR_name, data, eq_timing_model, overlap_file):
 
     VLBI_color = "rgba(0, 204, 150, 0.5)"  # px.colors.qualitative.Pastel1[2]
     timing_color = "rgba(99, 110, 250, 0.5)"  # px.colors.qualitative.Pastel1[1]
-    grid_num: int = 40
-    factor: int = 2.0
+    grid_num: int = 10
+    factor: int = 3.0
 
     # Timing model in ecliptical coordiantes
 #    ec_timing_model = models.get_model(glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}*.nb.par")[0])
