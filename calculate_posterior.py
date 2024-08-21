@@ -17,9 +17,9 @@ import astropy.units as u
 
 from VLBI_utils import calculate_prior, replace_params
 import glob
+import sys
 
-
-def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, astrometric_data_file, plot=False):
+def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, astrometric_data_file, resume=False, plot=False):
     sns.set_theme(context="paper", style="darkgrid", font_scale=1.5)
 
     print(f"Processing iteration {timing_solution.Index} of {PSR_name}")
@@ -64,7 +64,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, a
     # Re-run noise
     print("Re-running noise")
     noise_utils.model_noise(eq_timing_model, toas, vary_red_noise=True, n_iter=int(5e4), using_wideband=False,
-                            resume=False, run_noise_analysis=True, base_op_dir=f"noisemodel_linear_sd/timing_solution_{timing_solution.Index}/")
+                            resume=resume, run_noise_analysis=True, base_op_dir=f"noisemodel_linear_sd/timing_solution_{timing_solution.Index}/")
     newmodel = noise_utils.add_noise_to_model(eq_timing_model, save_corner=False, base_dir=f"noisemodel_linear_sd/timing_solution_{timing_solution.Index}/")
     print("Done!")
 
@@ -111,11 +111,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, a
 if __name__ == "__main__":
     PSR_name, idx, PMRA, PMDEC, PX = sys.argv[1:]  # Timing solution index and parameters
 
-    import astropy
-    import pint
-
-    print(astropy.__version__)
-    print(pint.__version__)
+    resume: bool = True
 
     timing_solution_dict = {"Index": idx, "PMRA": PMRA, "PMDEC": PMDEC, "PX": PX}
     for t in pd.DataFrame(timing_solution_dict, columns=list(timing_solution_dict.keys())[1:], index=[timing_solution_dict['Index']]).itertuples(index=True):
@@ -129,7 +125,7 @@ if __name__ == "__main__":
     parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}*par")[0]
 
     # Calculate the posterior
-    posterior = calculate_post(PSR_name, timing_solution, timfile, parfile, astrometric_data_file)
+    posterior = calculate_post(PSR_name, timing_solution, timfile, parfile, astrometric_data_file, resume)[0][0]
 
     # Save the timing solution with its posterior
     res_np = np.asarray([idx, PMRA, PMDEC, PX, posterior])
