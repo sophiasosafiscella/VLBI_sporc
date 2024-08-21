@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from glob import glob
 import sys
-import os
+from tqdm import tqdm
 
 PSR_name: str = sys.argv[1]
 posteriors_dir: str = f"./results/timing_posteriors/{PSR_name}"
@@ -12,7 +12,7 @@ posterior_files = glob(f"{posteriors_dir}/*posterior.npy")
 res_np = np.zeros((len(posterior_files), 4), dtype=float)
 idx_np = np.zeros(len(posterior_files), dtype=int)
 
-for i, file in enumerate(posterior_files):
+for i, file in tqdm(enumerate(posterior_files)):
     aux = np.load(file)
     res_np[i, :] = aux[1:]
     idx_np[i] = aux[0]
