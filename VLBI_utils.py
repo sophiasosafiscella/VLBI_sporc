@@ -53,13 +53,13 @@ def pdf_values(x0, uL, uR, factor, num: int = 1000):
 
     # If the error bars are equal, we have a normal distribution
     if uL == uR:
-        x = np.linspace(x0 - n * uL, x0 + n * uR, num)
+        x = np.linspace(x0 - factor * uL, x0 + factor * uR, num)
         y = norm.pdf(x, loc=x0, scale=uL)
 
     # If the error bars are not equal, we have a skew-normal distribution
     if uL != uR:
         res = parSkewNormal(x0=x0, uL=uL, uR=uR)
-        x = np.linspace(res['loc'] - n * res['scale'], res['loc'] + n * res['scale'], num)
+        x = np.linspace(res['loc'] - factor * res['scale'], res['loc'] + factor * res['scale'], num)
         y = skewnorm.pdf(x, a=res['a'], loc=res['loc'], scale=res['scale'])
 
     return x, y
