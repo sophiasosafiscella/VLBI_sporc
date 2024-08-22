@@ -4,18 +4,13 @@ import numpy as np
 import seaborn as sns
 from pint.models import get_model
 from scipy.interpolate import griddata
-import sys
-from glob import glob
+import glob
 
-# Function to create contour plot
 def plot_contour(df, tm, x_col, y_col, w_col, ax):
     # Extract columns
     x = df[x_col]
     y = df[y_col]
     w = df[w_col]
-
-    # Extract the reference timing values
-    ax.scatter(getattr(tm, x_col).value, getattr(tm, y_col).value, marker='x', c='red')
 
     # Create grid values first
     xi = np.linspace(x.min(), x.max(), 100)
@@ -28,8 +23,12 @@ def plot_contour(df, tm, x_col, y_col, w_col, ax):
     # Plot contour
     contour = ax.contourf(xi, yi, zi, levels=15, cmap="viridis")
     plt.colorbar(contour, ax=ax, label=w_col)
-    ax.set_xlabel(x_col)
-    ax.set_ylabel(y_col)
+
+    # Extract the reference timing values
+    ax.scatter(getattr(tm, x_col).value, getattr(tm, y_col).value, marker='x', c='red', s=400)
+
+    ax.set_xlabel(f"{x_col} [{getattr(tm, x_col).units}]")
+    ax.set_ylabel(f"{y_col} [{getattr(tm, y_col).units}]")
 #    ax.set_title(f'{x_col} vs {y_col} with {w_col} as color')
 
 
@@ -49,6 +48,7 @@ if __name__ == "__main__":
     sns.set_context('poster')
     sns.set_style('ticks')
     fig, axs = plt.subplots(2, 2, figsize=(18, 12))
+    fig.suptitle(PSR_name)
     axs[0, 1].axis('off')
 
     # Plot each pair
