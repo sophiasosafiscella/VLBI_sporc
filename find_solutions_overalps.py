@@ -229,6 +229,6 @@ if __name__ == "__main__":
         factor: int = 3.0    # n * sigma range to look for the overlap
 
         # Name of the DataFrame containing the overlap between the timing and VLBI solutions
-        overlap_file: str = f"./results/{PSR_name}_overlap.txt"
+        overlap_file: str = f"./results/overlaps/{PSR_name}_overlap.txt"
 
         find_overlap(PSR_name, astrometric_data, eq_timing_model, overlap_file, grid_num, factor, plot)
