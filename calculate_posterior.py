@@ -111,7 +111,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, a
 if __name__ == "__main__":
     PSR_name, idx, PMRA, PMDEC, PX = sys.argv[1:]  # Timing solution index and parameters
 
-    resume: bool = True
+    resume: bool = False
 
     timing_solution_dict = {"Index": idx, "PMRA": PMRA, "PMDEC": PMDEC, "PX": PX}
     for t in pd.DataFrame(timing_solution_dict, columns=list(timing_solution_dict.keys())[1:], index=[timing_solution_dict['Index']]).itertuples(index=True):
