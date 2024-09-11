@@ -212,7 +212,9 @@ if __name__ == "__main__":
     PSR_list = astrometric_data.index     # List of pulsars
 
     # Iterate over the pulsars
-    for PSR_name in PSR_list[0:1]:
+    for PSR_name in ["J1024-0719"]:
+
+        print(f"Finding the possible timing solutions for {PSR_name}")
 
         # Names of the .tim and .par files
         timfile: str = glob.glob(f"./data/NG_15yr_dataset/tim/{PSR_name}*tim")[0]
