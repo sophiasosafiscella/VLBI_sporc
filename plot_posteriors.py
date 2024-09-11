@@ -34,7 +34,7 @@ def plot_contour(df, tm, x_col, y_col, w_col, ax):
 
 if __name__ == "__main__":
 
-    PSR_name: str = "J0030+0451"
+    PSR_name: str = "J1640+2224"
 
     # Get the nominal timing values
     parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}*par")[0]

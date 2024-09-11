@@ -45,7 +45,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, a
         plt.xlabel("MJD")
         plt.ylabel("Residual ($\mu s$)")
         plt.tight_layout()
-        plt.savefig("./figures/residuals/" + PSR_name + "_" + str(timing_solution.Index) + "_pre.png")
+        plt.savefig("./results/new_fits/" + PSR_name + "/" + str(timing_solution.Index) + "_pre.png")
         plt.show()
 
     # Unfreeze the EFAC and EQUAD noise parameters
@@ -74,6 +74,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, a
         print("Fitting the new model")
         final_fit.fit_toas(maxiter=5)
         final_fit_resids = final_fit.resids
+        final_fit.model.write_parfile("/results/new_fits/" + PSR_name + "/solution_" + str(timing_solution.Index) + "_new.par", "wt")  # Save the new .par fil
         print("Done!")
 
         # Calculate the posterior for this model and TOAs
@@ -102,7 +103,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, a
         plt.ylabel("Residual ($\mu s$)")
         plt.grid()
         plt.tight_layout()
-        plt.savefig("./figures/residuals/" + PSR_name + "_" + str(timing_solution.Index) + "_post.png")
+        plt.savefig("./results/new_fits/" + PSR_name + "/" + str(timing_solution.Index) + "_post.png")
         plt.show()
 
     return posterior
@@ -110,8 +111,6 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, a
 
 if __name__ == "__main__":
     PSR_name, idx, PMRA, PMDEC, PX = sys.argv[1:]  # Timing solution index and parameters
-
-    resume: bool = False
 
     timing_solution_dict = {"Index": idx, "PMRA": PMRA, "PMDEC": PMDEC, "PX": PX}
     for t in pd.DataFrame(timing_solution_dict, columns=list(timing_solution_dict.keys())[1:], index=[timing_solution_dict['Index']]).itertuples(index=True):
@@ -125,7 +124,7 @@ if __name__ == "__main__":
     parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}*par")[0]
 
     # Calculate the posterior
-    posterior = calculate_post(PSR_name, timing_solution, timfile, parfile, astrometric_data_file, resume)[0][0]
+    posterior = calculate_post(PSR_name, timing_solution, timfile, parfile, astrometric_data_file, resume=True, plot=True)[0][0]
 
     # Save the timing solution with its posterior
     res_np = np.asarray([idx, PMRA, PMDEC, PX, posterior])
