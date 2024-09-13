@@ -74,7 +74,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, a
         print("Fitting the new model")
         final_fit.fit_toas(maxiter=5)
         final_fit_resids = final_fit.resids
-        final_fit.model.write_parfile("/results/new_fits/" + PSR_name + "/solution_" + str(timing_solution.Index) + "_new.par", "wt")  # Save the new .par fil
+        final_fit.model.write_parfile("./results/new_fits/" + PSR_name + "/solution_" + str(timing_solution.Index) + "_new.par")  # Save the new .par fil
         print("Done!")
 
         # Calculate the posterior for this model and TOAs
@@ -124,7 +124,7 @@ if __name__ == "__main__":
     parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}*par")[0]
 
     # Calculate the posterior
-    posterior = calculate_post(PSR_name, timing_solution, timfile, parfile, astrometric_data_file, resume=True, plot=True)[0][0]
+    posterior = calculate_post(PSR_name, timing_solution, timfile, parfile, astrometric_data_file, resume=True, plot=False)[0][0]
 
     # Save the timing solution with its posterior
     res_np = np.asarray([idx, PMRA, PMDEC, PX, posterior])

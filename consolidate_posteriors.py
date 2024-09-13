@@ -23,5 +23,5 @@ result_df = pd.DataFrame(data=res_np, index=idx_np, columns=["PMRA", "PMDEC", "P
 result_df.to_pickle(f"./results/timing_posteriors/{PSR_name}_timing_posteriors.pkl")
 
 # Find the solution with the highest posterior
-best_sol = result_df['Value'].idxmax()
+best_sol = result_df['posterior'].idxmax()
 print(f"Best sol: {best_sol}")
