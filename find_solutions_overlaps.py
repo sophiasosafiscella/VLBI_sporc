@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -27,18 +29,18 @@ def circle(radius, center):
 
     return np.column_stack((x, y))
 
-def find_overlap(PSR_name, data, eq_timing_model, overlap_file, grid_num: int, factor: int, plot=False):
 
+def find_overlap(PSR_name, data, eq_timing_model, overlap_file, grid_num: int, factor: int, plot=False):
     VLBI_color = "rgba(0, 204, 150, 0.5)"  # px.colors.qualitative.Pastel1[2]
     timing_color = "rgba(99, 110, 250, 0.5)"  # px.colors.qualitative.Pastel1[1]
 
     # Timing model in ecliptical coordiantes
-#    ec_timing_model = models.get_model(glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}*.nb.par")[0])
+    #    ec_timing_model = models.get_model(glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}*.nb.par")[0])
 
     # Timing model in equatorial coordinates
-#    eq_timing_model = ec_timing_model.as_ICRS(epoch=Time(data.loc[PSR_name, "POSEPOCH"], format="mjd"))
+    #    eq_timing_model = ec_timing_model.as_ICRS(epoch=Time(data.loc[PSR_name, "POSEPOCH"], format="mjd"))
 
-    #------------------------------Proper Motion------------------------------
+    # ------------------------------Proper Motion------------------------------
     # Timing
     timing_PMRA = ufloat(eq_timing_model.PMRA.value, eq_timing_model.PMRA.uncertainty.value)
     timing_PMDEC = ufloat(eq_timing_model.PMDEC.value, eq_timing_model.PMDEC.uncertainty.value)
@@ -48,14 +50,16 @@ def find_overlap(PSR_name, data, eq_timing_model, overlap_file, grid_num: int, f
     timing_PM = umath.sqrt(timing_PMRA_star ** 2 + timing_PMDEC ** 2)
 
     # Define grid points for X and Y
-    #PMRA_values = np.linspace(timing_PMRA_star.nominal_value - 4 * timing_PMRA_star.std_dev,
+    # PMRA_values = np.linspace(timing_PMRA_star.nominal_value - 4 * timing_PMRA_star.std_dev,
     #                       timing_PMRA_star.nominal_value + 4 * timing_PMRA_star.std_dev, grid_num)
-    #PMDEC_values = np.linspace(timing_PMDEC.nominal_value - 4 * timing_PMDEC.std_dev,
+    # PMDEC_values = np.linspace(timing_PMDEC.nominal_value - 4 * timing_PMDEC.std_dev,
     #                       timing_PMDEC.nominal_value + 4 * timing_PMDEC.std_dev, grid_num)
 
     # Make a grid of PMRA/PMDEC values, and calculate probability density functions (PDFs) for each of those values
-    PMRA_values, PMRA_pdf = pdf_values(x0=timing_PMRA_star.nominal_value, uL=timing_PMRA_star.std_dev, uR=timing_PMRA_star.std_dev, factor=factor, num=grid_num)
-    PMDEC_values, PMDEC_pdf = pdf_values(x0=timing_PMDEC.nominal_value, uL=timing_PMDEC.std_dev, uR=timing_PMDEC.std_dev, factor=factor, num=grid_num)
+    PMRA_values, PMRA_pdf = pdf_values(x0=timing_PMRA_star.nominal_value, uL=timing_PMRA_star.std_dev,
+                                       uR=timing_PMRA_star.std_dev, factor=factor, num=grid_num)
+    PMDEC_values, PMDEC_pdf = pdf_values(x0=timing_PMDEC.nominal_value, uL=timing_PMDEC.std_dev,
+                                         uR=timing_PMDEC.std_dev, factor=factor, num=grid_num)
 
     # Calculate the joint probability distribution by multiplying the PDFs
     joint_pdf = np.outer(PMRA_pdf, PMDEC_pdf)
@@ -64,16 +68,17 @@ def find_overlap(PSR_name, data, eq_timing_model, overlap_file, grid_num: int, f
     joint_pdf /= np.sum(joint_pdf)
 
     if plot:
-
         # Create a meshgrid for contour plotting
         X, Y = np.meshgrid(PMRA_values, PMDEC_values)
 
         # Create figure and axes objects for main plot and marginal distributions
-        sns.set_theme(context="paper", style="ticks", font_scale=1.8, rc={"axes.axisbelow": False, "grid.linewidth": 1.4})
+        sns.set_theme(context="paper", style="ticks", font_scale=1.8,
+                      rc={"axes.axisbelow": False, "grid.linewidth": 1.4})
         fig, ([ax_marginal_x, other], [ax_main, ax_marginal_y]) = plt.subplots(2, 2, figsize=(11, 8),
                                                                                gridspec_kw={'height_ratios': [1, 4],
                                                                                             'width_ratios': [4, 1],
-                                                                                            'hspace': 0.00, 'wspace': 0.00})
+                                                                                            'hspace': 0.00,
+                                                                                            'wspace': 0.00})
 
         # Plot contour plot on main axes
         contour = ax_main.contourf(X, Y, joint_pdf, cmap="viridis", zorder=0)
@@ -108,11 +113,13 @@ def find_overlap(PSR_name, data, eq_timing_model, overlap_file, grid_num: int, f
         other.set_yticks([])
 
         # Create a circle containing the +/- values
-        circle_timing_out = plt.Circle((0, 0), radius=timing_PM.nominal_value + factor * timing_PM.std_dev, color='r', lw=3, ls=":",
-                                   fill=False,
-                                   label="$\mu_{\mathrm{timing}} \pm$" + str(factor) + "$\sigma_{\mu}$")
-        circle_timing_in = plt.Circle((0, 0), radius=timing_PM.nominal_value - factor * timing_PM.std_dev, color='r', lw=3, ls=":",
-                                    fill=False)
+        circle_timing_out = plt.Circle((0, 0), radius=timing_PM.nominal_value + factor * timing_PM.std_dev, color='r',
+                                       lw=3, ls=":",
+                                       fill=False,
+                                       label="$\mu_{\mathrm{timing}} \pm$" + str(factor) + "$\sigma_{\mu}$")
+        circle_timing_in = plt.Circle((0, 0), radius=timing_PM.nominal_value - factor * timing_PM.std_dev, color='r',
+                                      lw=3, ls=":",
+                                      fill=False)
         ax_main.add_patch(circle_timing_out)
         ax_main.add_patch(circle_timing_in)
 
@@ -132,10 +139,13 @@ def find_overlap(PSR_name, data, eq_timing_model, overlap_file, grid_num: int, f
 
     # Make circles representing the PM +/- 2sigma region for VLBI
     if plot:
-        circle_uL = plt.Circle((0, 0), VLBI_PM.nominal_value - factor * VLBI_PM.std_dev, color='g', lw=3, ls="--", fill=False,
+        circle_uL = plt.Circle((0, 0), VLBI_PM.nominal_value - factor * VLBI_PM.std_dev, color='g', lw=3, ls="--",
+                               fill=False,
                                label="$\mu_{\mathrm{VLBI}} \pm$" + str(factor) + "$\sigma_{\mu}$")
-        circle_ML = plt.Circle((0, 0), VLBI_PM.nominal_value, color='b', lw=4, fill=False, label="$\mu_{\mathrm{VLBI}}$")
-        circle_uR = plt.Circle((0, 0), VLBI_PM.nominal_value + factor * VLBI_PM.std_dev, color='g', lw=3, ls="--", fill=False)
+        circle_ML = plt.Circle((0, 0), VLBI_PM.nominal_value, color='b', lw=4, fill=False,
+                               label="$\mu_{\mathrm{VLBI}}$")
+        circle_uR = plt.Circle((0, 0), VLBI_PM.nominal_value + factor * VLBI_PM.std_dev, color='g', lw=3, ls="--",
+                               fill=False)
         ax_main.add_patch(circle_uL)
         ax_main.add_patch(circle_ML)
         ax_main.add_patch(circle_uR)
@@ -154,18 +164,18 @@ def find_overlap(PSR_name, data, eq_timing_model, overlap_file, grid_num: int, f
     timing_PX_err = eq_timing_model.PX.uncertainty.value
     PX_values, PX_pdf = pdf_values(x0=timing_PX, uL=timing_PX_err, uR=timing_PX_err, factor=factor, num=grid_num)
 
-#    if PSR_name == "J0437-4715":
-#        timing_PX = 6.65
-#        timing_PX_err = 0.51
+    #    if PSR_name == "J0437-4715":
+    #        timing_PX = 6.65
+    #        timing_PX_err = 0.51
 
     if plot:
         fig = go.Figure()
         sns.set_theme(context="paper", style="dark", font_scale=1.5)
 
-        fig.add_trace(go.Scatter(x=PX_values, y=PX_pdf, name="Timing", fill='tozeroy', fillcolor=timing_color, mode='none'))
-        fig.add_vline(x=timing_PX-2*timing_PX_err, line_width=3, line_dash="dash", line_color="blue")
-        fig.add_vline(x=timing_PX+2*timing_PX_err, line_width=3, line_dash="dash", line_color="blue")
-
+        fig.add_trace(
+            go.Scatter(x=PX_values, y=PX_pdf, name="Timing", fill='tozeroy', fillcolor=timing_color, mode='none'))
+        fig.add_vline(x=timing_PX - 2 * timing_PX_err, line_width=3, line_dash="dash", line_color="blue")
+        fig.add_vline(x=timing_PX + 2 * timing_PX_err, line_width=3, line_dash="dash", line_color="blue")
 
     # VLBI
     VLBI_PX_x0: float = data.loc[PSR_name, "VLBI_PX"]
@@ -182,55 +192,53 @@ def find_overlap(PSR_name, data, eq_timing_model, overlap_file, grid_num: int, f
         fig.write_image(f"./figures/density_plots/{PSR_name}_PX.png")
         fig.show()
 
-
     # ------------------------------Find the overlap------------------------------
 
     # Make an array to store the points that are in the overlap area
-    results = np.empty((grid_num**3, 3))
+    results = np.empty((grid_num ** 3, 3))
     results[:, :] = np.nan
 
     # Iterate over all points
     for i, (mu_alpha_star, mu_delta, px) in enumerate(product(PMRA_values, PMDEC_values, PX_values)):
 
-        if VLBI_PM.nominal_value - factor * VLBI_PM_uL < math.sqrt(mu_alpha_star**2 + mu_delta**2) < VLBI_PM.nominal_value + factor * VLBI_PM_uR:
+        if VLBI_PM.nominal_value - factor * VLBI_PM_uL < math.sqrt(
+                mu_alpha_star ** 2 + mu_delta ** 2) < VLBI_PM.nominal_value + factor * VLBI_PM_uR:
 
-#            if contains_properly(timing_polygon, Point(mu_alpha_star, mu_delta)):
+            #            if contains_properly(timing_polygon, Point(mu_alpha_star, mu_delta)):
 
-             if VLBI_PX_x0 - factor * VLBI_PX_uL < px < VLBI_PX_x0 + factor * VLBI_PX_uR:
-
-                 results[i, :] = [mu_alpha_star / math.cos(timing_DECJ.nominal_value), mu_delta, px]
+            if VLBI_PX_x0 - factor * VLBI_PX_uL < px < VLBI_PX_x0 + factor * VLBI_PX_uR:
+                results[i, :] = [mu_alpha_star / math.cos(timing_DECJ.nominal_value), mu_delta, px]
 
     overlap_df = pd.DataFrame(data=results, columns=["PMRA", "PMDEC", "PX"]).dropna(how="any", ignore_index=True)
     overlap_df.to_csv(overlap_file, sep=" ", header=True, index_label="ArrayTaskID")
 
     return
 
+
 if __name__ == "__main__":
+    PSR_name: str = sys.argv[1]
 
     # File containing the timing and VLBI astrometric data
     astrometric_data = pd.read_csv("./data/astrometric_values.csv", index_col=0)
-    PSR_list = astrometric_data.index     # List of pulsars
+    PSR_list = astrometric_data.index  # List of pulsars
 
-    # Iterate over the pulsars
-    for PSR_name in ["J1024-0719"]:
+    print(f"Finding the possible timing solutions for {PSR_name}")
 
-        print(f"Finding the possible timing solutions for {PSR_name}")
+    # Names of the .tim and .par files
+    timfile: str = glob.glob(f"./data/NG_15yr_dataset/tim/{PSR_name}*tim")[0]
+    parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}*par")[0]
 
-        # Names of the .tim and .par files
-        timfile: str = glob.glob(f"./data/NG_15yr_dataset/tim/{PSR_name}*tim")[0]
-        parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}*par")[0]
+    # Load the timing model and convert to equatorial coordinates
+    ec_timing_model = get_model(parfile)  # Ecliptical coordiantes
+    eq_timing_model = ec_timing_model.as_ICRS(epoch=ec_timing_model.POSEPOCH.value)
 
-        # Load the timing model and convert to equatorial coordinates
-        ec_timing_model = get_model(parfile)  # Ecliptical coordiantes
-        eq_timing_model = ec_timing_model.as_ICRS(epoch=ec_timing_model.POSEPOCH.value)
+    # FIND THE OVERLAP BETWEEN THE TIMING AND VLBI SOLUTIONS
 
-        # FIND THE OVERLAP BETWEEN THE TIMING AND VLBI SOLUTIONS
+    plot: bool = False
+    grid_num: int = 10  # How coarse or thin to make the gridline
+    factor: int = 3.0  # n * sigma range to look for the overlap
 
-        plot: bool = False
-        grid_num: int = 10   # How coarse or thin to make the gridline
-        factor: int = 3.0    # n * sigma range to look for the overlap
+    # Name of the DataFrame containing the overlap between the timing and VLBI solutions
+    overlap_file: str = f"./results/overlaps/{PSR_name}_overlap.txt"
 
-        # Name of the DataFrame containing the overlap between the timing and VLBI solutions
-        overlap_file: str = f"./results/overlaps/{PSR_name}_overlap.txt"
-
-        find_overlap(PSR_name, astrometric_data, eq_timing_model, overlap_file, grid_num, factor, plot)
+    find_overlap(PSR_name, astrometric_data, eq_timing_model, overlap_file, grid_num, factor, plot)
