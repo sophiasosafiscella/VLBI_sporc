@@ -216,29 +216,31 @@ def find_overlap(PSR_name, data, eq_timing_model, overlap_file, grid_num: int, f
 
 
 if __name__ == "__main__":
-    PSR_name: str = sys.argv[1]
+#    PSR_name: str = sys.argv[1]
 
     # File containing the timing and VLBI astrometric data
     astrometric_data = pd.read_csv("./data/astrometric_values.csv", index_col=0)
     PSR_list = astrometric_data.index  # List of pulsars
 
-    print(f"Finding the possible timing solutions for {PSR_name}")
+    for PSR_name in PSR_list:
 
-    # Names of the .tim and .par files
-    timfile: str = glob.glob(f"./data/NG_15yr_dataset/tim/{PSR_name}*tim")[0]
-    parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}*par")[0]
+        print(f"Finding the possible timing solutions for {PSR_name}")
 
-    # Load the timing model and convert to equatorial coordinates
-    ec_timing_model = get_model(parfile)  # Ecliptical coordiantes
-    eq_timing_model = ec_timing_model.as_ICRS(epoch=ec_timing_model.POSEPOCH.value)
+        # Names of the .tim and .par files
+        timfile: str = glob.glob(f"./data/NG_15yr_dataset/tim/{PSR_name}*tim")[0]
+        parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}*par")[0]
 
-    # FIND THE OVERLAP BETWEEN THE TIMING AND VLBI SOLUTIONS
+        # Load the timing model and convert to equatorial coordinates
+        ec_timing_model = get_model(parfile)  # Ecliptical coordiantes
+        eq_timing_model = ec_timing_model.as_ICRS(epoch=ec_timing_model.POSEPOCH.value)
 
-    plot: bool = False
-    grid_num: int = 10  # How coarse or thin to make the gridline
-    factor: int = 3.0  # n * sigma range to look for the overlap
+        # FIND THE OVERLAP BETWEEN THE TIMING AND VLBI SOLUTIONS
 
-    # Name of the DataFrame containing the overlap between the timing and VLBI solutions
-    overlap_file: str = f"./results/overlaps/{PSR_name}_overlap.txt"
+        plot: bool = True
+        grid_num: int = 10  # How coarse or thin to make the gridline
+        factor: int = 3.0  # n * sigma range to look for the overlap
 
-    find_overlap(PSR_name, astrometric_data, eq_timing_model, overlap_file, grid_num, factor, plot)
+        # Name of the DataFrame containing the overlap between the timing and VLBI solutions
+        overlap_file: str = f"./results/overlaps/{PSR_name}_overlap.txt"
+
+        find_overlap(PSR_name, astrometric_data, eq_timing_model, overlap_file, grid_num, factor, plot)

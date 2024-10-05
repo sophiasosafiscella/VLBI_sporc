@@ -48,7 +48,7 @@ def parSkewNormal(x0, uL, uR, pX=0.5, pL=0.025, pR=0.975, wX=1, wL=1, wR=1):
         raise ValueError("Optimization failed")
 
 
-def pdf_values(x0, uL, uR, factor, num: int = 1000):
+def pdf_values(x0, uL, uR, factor=3, num: int = 1000):
     # Make a grid of values around the nominal values, and calculate the pdf for those values
 
     # If the error bars are equal, we have a normal distribution
