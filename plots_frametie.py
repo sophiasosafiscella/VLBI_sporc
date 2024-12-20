@@ -13,10 +13,10 @@ from pint import models
 from astropy.coordinates import Angle, Longitude, Latitude, SkyCoord, FK5, ICRS, BarycentricMeanEcliptic, BarycentricTrueEcliptic, Galactic, BaseEclipticFrame
 from astropy.time import Time
 import astropy.units as u
-#from skewnormal import pdf_values
-from VLBI_utils import pdf_values
+from VLBI_utils import pdf_values, spherical_to_cartesian, cartesian_to_spherical
 
 from uncertainties import ufloat, umath, unumpy
+from math import pi
 
 import glob
 import sys
@@ -35,28 +35,46 @@ ICRS_to_SSB = np.matrix([[1.0, ft[2], -1.0*ft[1]], [-1.0 * ft[2], 1.0, ft[0]], [
 
 for i, PSR in enumerate(PSR_list):
 
-    # Frame tie
-    VLBI_skycoords = SkyCoord(ra=data.loc[PSR, "VLBI_RAJ"], dec=data.loc[PSR, "VLBI_DECJ"],
-                              frame=ICRS, unit=(u.hourangle, u.deg),
-                              equinox=data.loc[PSR, "equinox"], obstime=Time(val=data.loc[PSR, "POSEPOCH"], format='mjd', scale='utc'))
+    VLBI_pos_ICRF = SkyCoord(ra=data.loc[PSR, "VLBI_RAJ"], dec=data.loc[PSR, "VLBI_DECJ"],
+                            frame=ICRS, unit=(u.hourangle, u.deg),
+                            equinox=data.loc[PSR, "equinox"],
+                            obstime=Time(val=data.loc[PSR, "POSEPOCH"], format='mjd', scale='utc'))
 
-    VLBI_skycoords_err = SkyCoord(ra=data.loc[PSR, "VLBI_RAJ_err"], dec=data.loc[PSR, "VLBI_DECJ_err"],
-                                  frame=ICRS, unit=(u.hourangle, u.deg),
-                                  equinox=data.loc[PSR, "equinox"], obstime=Time(val=data.loc[PSR, "POSEPOCH"], format='mjd', scale='utc'))
+    VLBI_pos_ICRF_err = SkyCoord(ra=data.loc[PSR, "VLBI_RAJ_err"], dec=data.loc[PSR, "VLBI_DECJ_err"],
+                                 frame=ICRS, unit=(u.hourangle, u.deg),
+                                 equinox=data.loc[PSR, "equinox"],
+                                 obstime=Time(val=data.loc[PSR, "POSEPOCH"], format='mjd',
+                                              scale='utc'))
 
-    VLBI_SSB_xyz = np.dot(ICRS_to_SSB, np.transpose(VLBI_skycoords.cartesian.get_xyz()))
-    VLBI_SSB_xyz_err = np.dot(ICRS_to_SSB, np.transpose(VLBI_skycoords_err.cartesian.get_xyz()))
+    # Create uncertainty objects to handle error propagation
+    VLBI_pos_ICRF = np.array([ufloat(VLBI_pos_ICRF.ra.rad, VLBI_pos_ICRF_err.ra.rad),
+                             ufloat(VLBI_pos_ICRF.dec.rad, VLBI_pos_ICRF_err.dec.rad)])
 
-    VLBI_SSB = SkyCoord(x=VLBI_SSB_xyz[0], y=VLBI_SSB_xyz[1], z=VLBI_SSB_xyz[2], representation_type='cartesian')
-    VLBI_SSB.representation_type = 'spherical'
-    VLBI_SSB_RA = VLBI_SSB.ra.to('hourangle')
-    VLBI_SSB_DEC = VLBI_SSB.dec.to('deg')
+    # Transform the (RA,DEC) to cartesian components in the ICRF. Do the error propagation automatically
+    VLBI_pos_ICRF_xyz = spherical_to_cartesian(VLBI_pos_ICRF)
 
-    VLBI_SSB_err = SkyCoord(x=VLBI_SSB_xyz_err[0], y=VLBI_SSB_xyz_err[1], z=VLBI_SSB_xyz_err[2], representation_type='cartesian')
-    VLBI_SSB_err.representation_type = 'spherical'
-    VLBI_SSB_RA_err = VLBI_SSB_err.ra.to('hourangle')
-    VLBI_SSB_DEC_err = VLBI_SSB_err.dec.to('deg')
+    # Transform to xyz coordinates from the ICRF to the SSB frame
+    VLBI_pos_SSB_xyz = np.array((np.dot(ICRS_to_SSB, VLBI_pos_ICRF_xyz)))[0]
 
+    # Transform cartesian components in the SSB frame to (RA,DEC)
+    VLBI_RA_SSB, VLBI_DEC_SSB = cartesian_to_spherical(VLBI_pos_SSB_xyz)
+    print(type(VLBI_RA_SSB))
+    print(type(VLBI_DEC_SSB))
+    sys.exit()
+
+    VLBI_pos_SSB = SkyCoord(ra=VLBI_RA_SSB.nominal_value, dec=VLBI_DEC_SSB.nominal_value,
+                             frame=ICRS, unit=(u.hourangle, u.deg),
+                             equinox=data.loc[PSR, "equinox"],
+                             obstime=Time(val=data.loc[PSR, "POSEPOCH"], format='mjd', scale='utc'))
+
+    VLBI_pos_SSB_err = SkyCoord(ra=VLBI_RA_SSB.std_dev, dec=VLBI_DEC_SSB.std_dev,
+                                 frame=ICRS, unit=(u.hourangle, u.deg),
+                                 equinox=data.loc[PSR, "equinox"],
+                                 obstime=Time(val=data.loc[PSR, "POSEPOCH"], format='mjd',
+                                              scale='utc'))
+
+    print(VLBI_pos_SSB.ra)
+    sys.exit()
     # Equatorial timing model
     ec_timing_model = models.get_model(glob.glob(f"./data/NG_15yr_dataset/par/{PSR}*.nb.par")[0])   # Ecliptical coordiantes
 #    eq_timing_model = ec_timing_model.as_ICRS()  # Equatorial coordinates
@@ -64,10 +82,10 @@ for i, PSR in enumerate(PSR_list):
 
 
     # ------------------------------RAJ------------------------------
-    ref_RAJ = Angle(f"{int(VLBI_SSB_RA.hms[0])}h{int(VLBI_SSB_RA.hms[1])}m{int(VLBI_SSB_RA.hms[2])}s")
+    ref_RAJ = Angle(f"{int(VLBI_pos_SSB.ra.hms[0])}h{int(VLBI_pos_SSB.ra.hms[1])}m{int(VLBI_pos_SSB.ra.hms[2])}s")
 
-    VLBI_deltaRAJ_ms = (VLBI_SSB_RA - ref_RAJ).hms[2] * 1000.0
-    VLBI_RAJ_err_ms = VLBI_SSB_RA_err.hms[2] * 1000.0
+    VLBI_deltaRAJ_ms = (VLBI_pos_SSB.ra - ref_RAJ).hms[2] * 1000.0
+    VLBI_RAJ_err_ms = VLBI_pos_SSB_err.ra.hms[2] * 1000.0
     x, y = pdf_values(x0=VLBI_deltaRAJ_ms, uL=VLBI_RAJ_err_ms, uR=VLBI_RAJ_err_ms)
 
     if i==0:

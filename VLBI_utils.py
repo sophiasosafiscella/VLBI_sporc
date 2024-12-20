@@ -6,8 +6,29 @@ from astropy.coordinates import Angle
 from pandas.core.frame import pandas
 from pint.models.timing_model import TimingModel
 from scipy.stats import norm, skewnorm
-from uncertainties import ufloat, umath
+from uncertainties import ufloat, umath, unumpy
+
 import sys
+
+def spherical_to_cartesian(spherical: np.ndarray,):
+    """Converts spherical coordinates (rho, ra, dec) to Cartesian coordinates (x, y, z),"""
+    ra, dec = spherical
+    x = umath.cos(dec) * umath.cos(ra)
+    y = umath.cos(dec) * umath.sin(ra)
+    z = umath.sin(dec)
+
+    return np.array([x,y,z])
+
+def cartesian_to_spherical(cartesian: np.ndarray,):
+    """Converts Cartesian coordinates (x, y, z) to spherical coordinates (ra, dec)."""
+    x, y, z = cartesian
+
+    # Use umath's atan2 and acos, which propagate uncertainties automatically
+#    ra = unumpy.arctan2(y, x)  # Safely computes RA with uncertainty
+    ra = umath.atan2(y, x)  # Safely computes RA with uncertainty
+    dec = umath.asin(z)     # Safely computes DEC with uncertainty
+
+    return np.array([ra, dec])
 
 def parSkewNormal(x0, uL, uR, pX=0.5, pL=0.025, pR=0.975, wX=1, wL=1, wR=1):
     ## INPUTS
