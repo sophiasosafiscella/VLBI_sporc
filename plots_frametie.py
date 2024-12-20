@@ -28,19 +28,46 @@ fig = make_subplots(rows=len(PSR_list), cols=4, vertical_spacing=0.02)
 VLBI_color = "rgba(0, 204, 150, 0.5)"  # px.colors.qualitative.Pastel1[2]
 timing_color = "rgba(99, 110, 250, 0.5)"  # px.colors.qualitative.Pastel1[1]
 
+# Frame tie
+ft = np.load("./results/frame_tie.npy", allow_pickle=True)
+ICRS_to_SSB = np.matrix([[1.0, ft[2], -1.0*ft[1]], [-1.0 * ft[2], 1.0, ft[0]], [ft[1], -1.0*ft[0], 1.0]])
+
+
 for i, PSR in enumerate(PSR_list):
 
+    # Frame tie
+    VLBI_skycoords = SkyCoord(ra=data.loc[PSR, "VLBI_RAJ"], dec=data.loc[PSR, "VLBI_DECJ"],
+                              frame=ICRS, unit=(u.hourangle, u.deg),
+                              equinox=data.loc[PSR, "equinox"], obstime=Time(val=data.loc[PSR, "POSEPOCH"], format='mjd', scale='utc'))
+
+    VLBI_skycoords_err = SkyCoord(ra=data.loc[PSR, "VLBI_RAJ_err"], dec=data.loc[PSR, "VLBI_DECJ_err"],
+                                  frame=ICRS, unit=(u.hourangle, u.deg),
+                                  equinox=data.loc[PSR, "equinox"], obstime=Time(val=data.loc[PSR, "POSEPOCH"], format='mjd', scale='utc'))
+
+    VLBI_SSB_xyz = np.dot(ICRS_to_SSB, np.transpose(VLBI_skycoords.cartesian.get_xyz()))
+    VLBI_SSB_xyz_err = np.dot(ICRS_to_SSB, np.transpose(VLBI_skycoords_err.cartesian.get_xyz()))
+
+    VLBI_SSB = SkyCoord(x=VLBI_SSB_xyz[0], y=VLBI_SSB_xyz[1], z=VLBI_SSB_xyz[2], representation_type='cartesian')
+    VLBI_SSB.representation_type = 'spherical'
+    VLBI_SSB_RA = VLBI_SSB.ra.to('hourangle')
+    VLBI_SSB_DEC = VLBI_SSB.dec.to('deg')
+
+    VLBI_SSB_err = SkyCoord(x=VLBI_SSB_xyz_err[0], y=VLBI_SSB_xyz_err[1], z=VLBI_SSB_xyz_err[2], representation_type='cartesian')
+    VLBI_SSB_err.representation_type = 'spherical'
+    VLBI_SSB_RA_err = VLBI_SSB_err.ra.to('hourangle')
+    VLBI_SSB_DEC_err = VLBI_SSB_err.dec.to('deg')
+
+    # Equatorial timing model
     ec_timing_model = models.get_model(glob.glob(f"./data/NG_15yr_dataset/par/{PSR}*.nb.par")[0])   # Ecliptical coordiantes
 #    eq_timing_model = ec_timing_model.as_ICRS()  # Equatorial coordinates
     eq_timing_model = ec_timing_model.as_ICRS(epoch=ec_timing_model.POSEPOCH.value)  # Equatorial coordinates
 
-    # ------------------------------RAJ------------------------------
-    VLBI_RAJ = Angle(data.loc[PSR, "VLBI_RAJ"])
-    ref_RAJ = Angle(f"{int(VLBI_RAJ.hms[0])}h{int(VLBI_RAJ.hms[1])}m{int(VLBI_RAJ.hms[2])}s")
 
-    # VLBI
-    VLBI_deltaRAJ_ms = (Angle(data.loc[PSR, "VLBI_RAJ"]) - ref_RAJ).hms[2] * 1000.0
-    VLBI_RAJ_err_ms = Angle(data.loc[PSR, "VLBI_RAJ_err"]).hms[2] * 1000.0
+    # ------------------------------RAJ------------------------------
+    ref_RAJ = Angle(f"{int(VLBI_SSB_RA.hms[0])}h{int(VLBI_SSB_RA.hms[1])}m{int(VLBI_SSB_RA.hms[2])}s")
+
+    VLBI_deltaRAJ_ms = (VLBI_SSB_RA - ref_RAJ).hms[2] * 1000.0
+    VLBI_RAJ_err_ms = VLBI_SSB_RA_err.hms[2] * 1000.0
     x, y = pdf_values(x0=VLBI_deltaRAJ_ms, uL=VLBI_RAJ_err_ms, uR=VLBI_RAJ_err_ms)
 
     if i==0:
@@ -69,12 +96,11 @@ for i, PSR in enumerate(PSR_list):
     fig.update_xaxes(title_text="$\mathrm{RAJ} - " + f"{ref_RAJ:latex}"[1:-1] + " [\mathrm{mas}]$", row=i+1, col=1)
 
     # ------------------------------DECJ------------------------------
-    VLBI_DECJ = Angle(data.loc[PSR, "VLBI_DECJ"])
-    ref_DECJ = Angle(f"{int(VLBI_DECJ.dms[0])}d{int(abs(VLBI_DECJ.dms[1]))}m{int(abs(VLBI_DECJ.dms[2]))}s")
+    ref_DECJ = Angle(f"{int(VLBI_SSB_DEC.dms[0])}d{int(abs(VLBI_SSB_DEC.dms[1]))}m{int(abs(VLBI_SSB_DEC.dms[2]))}s")
 
     # VLBI
-    VLBI_deltaDECJ_ms = (Angle(data.loc[PSR, "VLBI_DECJ"]) - ref_DECJ).dms[2] * 1000.0
-    VLBI_DECJ_err_ms = Angle(data.loc[PSR, "VLBI_DECJ_err"]).dms[2] * 1000.0
+    VLBI_deltaDECJ_ms = (VLBI_SSB_DEC- ref_DECJ).dms[2] * 1000.0
+    VLBI_DECJ_err_ms = VLBI_SSB_DEC_err.dms[2] * 1000.0
     x, y = pdf_values(x0=VLBI_deltaDECJ_ms, uL=VLBI_DECJ_err_ms, uR=VLBI_DECJ_err_ms)
     fig.add_trace(go.Scatter(x=x, y=y, fill='tozeroy', fillcolor=VLBI_color, mode='none', showlegend=False), row=i+1, col=2)
 

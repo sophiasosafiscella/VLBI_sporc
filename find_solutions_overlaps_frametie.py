@@ -40,6 +40,11 @@ def find_overlap(PSR_name, data, eq_timing_model, overlap_file, grid_num: int, f
     # Timing model in equatorial coordinates
     #    eq_timing_model = ec_timing_model.as_ICRS(epoch=Time(data.loc[PSR_name, "POSEPOCH"], format="mjd"))
 
+    # ------------------------------Position------------------------------
+
+
+
+
     # ------------------------------Proper Motion------------------------------
     # Timing
     timing_PMRA = ufloat(eq_timing_model.PMRA.value, eq_timing_model.PMRA.uncertainty.value)
@@ -199,7 +204,7 @@ def find_overlap(PSR_name, data, eq_timing_model, overlap_file, grid_num: int, f
     results[:, :] = np.nan
 
     # Iterate over all points
-    for i, (mu_alpha_star, mu_delta, px) in enumerate(product(PMRA_values, PMDEC_values, PX_values)):
+    for i, (mu_alpha_star, mu_delta, px) in enumerate(product(RA_values, DEC_values, PMRA_values, PMDEC_values, PX_values)):
 
         if VLBI_PM.nominal_value - factor * VLBI_PM_uL < math.sqrt(
                 mu_alpha_star ** 2 + mu_delta ** 2) < VLBI_PM.nominal_value + factor * VLBI_PM_uR:
@@ -210,7 +215,7 @@ def find_overlap(PSR_name, data, eq_timing_model, overlap_file, grid_num: int, f
                 results[i, :] = [mu_alpha_star / math.cos(timing_DECJ.nominal_value), mu_delta, px]
 
     overlap_df = pd.DataFrame(data=results, columns=["PMRA", "PMDEC", "PX"]).dropna(how="any", ignore_index=True)
-#    overlap_df.to_csv(overlap_file, sep=" ", header=True, index_label="ArrayTaskID")
+    overlap_df.to_csv(overlap_file, sep=" ", header=True, index_label="ArrayTaskID")
 
     return
 
