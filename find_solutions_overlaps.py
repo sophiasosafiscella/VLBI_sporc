@@ -35,10 +35,10 @@ def find_overlap(PSR_name, data, eq_timing_model, overlap_file, grid_num: int, f
     timing_color = "rgba(99, 110, 250, 0.5)"  # px.colors.qualitative.Pastel1[1]
 
     # Timing model in ecliptical coordiantes
-    #    ec_timing_model = models.get_model(glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}*.nb.par")[0])
+    #    ec_timing_model = models.get_model(glob.glob(f"./VLBI_data/NG_15yr_dataset/par/{PSR_name}*.nb.par")[0])
 
     # Timing model in equatorial coordinates
-    #    eq_timing_model = ec_timing_model.as_ICRS(epoch=Time(data.loc[PSR_name, "POSEPOCH"], format="mjd"))
+    #    eq_timing_model = ec_timing_model.as_ICRS(epoch=Time(VLBI_data.loc[PSR_name, "POSEPOCH"], format="mjd"))
 
     # ------------------------------Proper Motion------------------------------
     # Timing
@@ -218,7 +218,7 @@ def find_overlap(PSR_name, data, eq_timing_model, overlap_file, grid_num: int, f
 if __name__ == "__main__":
 #    PSR_name: str = sys.argv[1]
 
-    # File containing the timing and VLBI astrometric data
+    # File containing the timing and VLBI astrometric VLBI_data
     astrometric_data = pd.read_csv("./data/astrometric_values.csv", index_col=0)
     PSR_list = astrometric_data.index  # List of pulsars
 

@@ -14,9 +14,6 @@ delta1713VLBI = (7*3600 + 47*60 + 37 + 0.519 - 0.0185*properMotionCorrect)*(2*pi
 alpha1713Timing = (17*3600 + 13*60 + 49 + 0.53077 + 0.001653*properMotionCorrect)*(2*pi/86400);
 delta1713Timing = (7*3600 + 47*60 + 37 + 0.5228 - 0.0185*properMotionCorrect)*(2*pi/1296000);
 
-print(alpha0437Timing)
-print(delta0437Timing)
-sys.exit()
 '''
 #propagate J1713 angles forward to J0437 epoch using proper motion from Hotan et al. (2006)
 alpha1713VLBI += 0.00497*((54100-52275)/365)*(2*pi/1296000)
@@ -57,8 +54,11 @@ Sigma = diag([sigma0437VLBI**2+sigma0437Timing**2,
               sigma1713VLBI**2+sigma1713Timing**2,
               sigma1713VLBI**2+sigma1713Timing**2])
 
+print(Sigma)
 #Form D
 D = [d0437[0],d0437[1],d0437[2],d1713[0],d1713[1],d1713[2]];
+
+print(D)
 
 #Do Equation 12 computation
 cov = dot(transpose(M),dot(inv(Sigma),M))
@@ -66,3 +66,4 @@ Ahat = dot(dot(dot(inv(cov),transpose(M)),inv(Sigma)),D)
 
 #Convert Ahat from radians to mas
 Ahat *= 1296000000/(2*pi)
+print(Ahat)

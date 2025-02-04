@@ -8,8 +8,11 @@ from astropy.coordinates import ICRS, Galactic, FK4, FK5  # Low-level frames
 from astropy.time import Time
 import astropy.units as u
 
+from VLBI_utils import umath_spherical_to_cartesian
+
 from uncertainties import ufloat
 from uncertainties.umath import *
+from math import sin, cos
 
 import sys
 
@@ -63,11 +66,13 @@ for i, PSR in enumerate(PSR_names):
                                 equinox=Time(val=data.loc[f"{PSR}_timing", "epoch"], format='mjd', scale='utc'))
 
     # Create uncertainty objects to handle error propagation
-    timing_RA = ufloat(timing_skycoords.ra.rad, timing_skycoords_err.ra.rad)
-    timing_DEC = ufloat(timing_skycoords.dec.rad, timing_skycoords_err.dec.rad)
+    timing_pos = np.array([ufloat(timing_skycoords.ra.rad, timing_skycoords_err.ra.rad),
+                          ufloat(timing_skycoords.dec.rad, timing_skycoords_err.dec.rad)])
 
     # Do the error propagation automatically
-    cartesian_timing_errs = error_propagation(timing_RA, timing_DEC)
+    timing_cartesian = umath_spherical_to_cartesian(timing_pos)
+    timing_cartesian_nominal = np.array([timing_cartesian[0].nominal_value, timing_cartesian[1].nominal_value, timing_cartesian[2].nominal_value])
+    timing_cartesian_errs = np.array([timing_cartesian[0].std_dev, timing_cartesian[1].std_dev, timing_cartesian[2].std_dev])
 
     VLBI_skycoords = SkyCoord(ra=data.loc[f"{PSR}_VLBI", "RAJ"], dec=data.loc[f"{PSR}_VLBI", "DECJ"],
                            frame=ICRS, unit=(u.hourangle, u.deg),
@@ -78,18 +83,22 @@ for i, PSR in enumerate(PSR_names):
                            equinox=Time(val=data.loc[f"{PSR}_VLBI", "epoch"], format='mjd', scale='utc'))
 
     # Create uncertainty objects to handle error propagation
-    VLBI_RA = ufloat(VLBI_skycoords.ra.rad, VLBI_skycoords_err.ra.rad)
-    VLBI_DEC = ufloat(VLBI_skycoords.dec.rad, VLBI_skycoords_err.dec.rad)
+    VLBI_pos = np.array([ufloat(VLBI_skycoords.ra.rad, VLBI_skycoords_err.ra.rad),
+                        ufloat(VLBI_skycoords.dec.rad, VLBI_skycoords_err.dec.rad)])
 
     # Do the error propagation automatically
-    cartesian_VLBI_errs = error_propagation(VLBI_RA, VLBI_DEC)
+    VLBI_cartesian = umath_spherical_to_cartesian(VLBI_pos)
+    VLBI_cartesian_nominal = np.array([VLBI_cartesian[0].nominal_value, VLBI_cartesian[1].nominal_value, VLBI_cartesian[2].nominal_value])
+    VLBI_cartesian_errs = np.array([VLBI_cartesian[0].std_dev, VLBI_cartesian[1].std_dev, VLBI_cartesian[2].std_dev])
 
     # Calculate the matrices
-    D_T[0, 3 * i:3 * (i + 1)] = (timing_skycoords.cartesian - VLBI_skycoords.cartesian).get_xyz()
+    D_T[0, 3 * i:3 * (i + 1)] = timing_cartesian_nominal - VLBI_cartesian_nominal
+#    D_T[0, 3 * i:3 * (i + 1)] = (timing_skycoords.cartesian - VLBI_skycoords.cartesian).get_xyz()
 
-    E_T[0, 3 * i:3 * (i + 1)] = cartesian_timing_errs - cartesian_VLBI_errs
+    E_T[0, 3 * i:3 * (i + 1)] = timing_cartesian_errs - VLBI_cartesian_errs
 
-    x, y, z = VLBI_skycoords.cartesian.get_xyz()
+#    x, y, z = VLBI_skycoords.cartesian.get_xyz()
+    x, y, z = VLBI_cartesian_nominal
     M_T[:, 3 * i:3 * (i + 1)] = np.transpose(np.matrix([[0, -z, y], [z, 0, -x], [-y, x, 0]]))
 
 # Do the calculations
@@ -107,10 +116,7 @@ Ahat = multi_dot([inv(cov), M_T, sigma_inv, D])
 
 Ax, Ay, Az = Angle(Ahat[0, 0], u.radian), Angle(Ahat[1, 0], u.radian), Angle(Ahat[2, 0], u.radian)
 
-np.save("./results/frame_tie.npy", np.array([Ax.value, Ay.value, Az.value]))
+#np.save("./results/frame_tie.npy", np.array([Ax.value, Ay.value, Az.value]))
 
-print(Ax.value, Ay.value, Az.value)
-
-print(Ax.arcsec*1000)
-print(Ay.arcsec*1000)
-print(Az.arcsec*1000)
+print(Ax, Ay, Az)
+print(Ax.mas, Ay.mas, Az.mas)

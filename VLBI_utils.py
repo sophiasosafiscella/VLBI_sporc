@@ -2,33 +2,34 @@ import astropy.units as u
 import numpy as np
 import pandas as pd
 import scipy
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, spherical_to_cartesian, cartesian_to_spherical, ICRS, SkyCoord
+from astropy.time import Time
 from pandas.core.frame import pandas
 from pint.models.timing_model import TimingModel
 from scipy.stats import norm, skewnorm
-from uncertainties import ufloat, umath, unumpy
+from uncertainties import ufloat, umath
 
 import sys
 
-def spherical_to_cartesian(spherical: np.ndarray,):
+def umath_spherical_to_cartesian(spherical):
     """Converts spherical coordinates (rho, ra, dec) to Cartesian coordinates (x, y, z),"""
-    ra, dec = spherical
-    x = umath.cos(dec) * umath.cos(ra)
-    y = umath.cos(dec) * umath.sin(ra)
-    z = umath.sin(dec)
+    # Note that the input angles should be in latitude/longitude or elevation/azimuthal form.
+    # I.e., the origin is along the equator rather than at the north poles
 
-    return np.array([x,y,z])
+    x = umath.cos(spherical["dec"]) * umath.cos(spherical["ra"])
+    y = umath.cos(spherical["dec"]) * umath.sin(spherical["ra"])
+    z = umath.sin(spherical["dec"])
 
-def cartesian_to_spherical(cartesian: np.ndarray,):
+    return dict(x=x, y=y, z=z)
+
+def umath_cartesian_to_spherical(cartesian):
     """Converts Cartesian coordinates (x, y, z) to spherical coordinates (ra, dec)."""
-    x, y, z = cartesian
 
     # Use umath's atan2 and acos, which propagate uncertainties automatically
-#    ra = unumpy.arctan2(y, x)  # Safely computes RA with uncertainty
-    ra = umath.atan2(y, x)  # Safely computes RA with uncertainty
-    dec = umath.asin(z)     # Safely computes DEC with uncertainty
+    ra = umath.atan2(cartesian["y"], cartesian["x"])  # Safely computes RA with uncertainty
+    dec = umath.asin(cartesian["z"])                  # Safely computes DEC with uncertainty
 
-    return np.array([ra, dec])
+    return dict(ra=ra, dec=dec)
 
 def parSkewNormal(x0, uL, uR, pX=0.5, pL=0.025, pR=0.975, wX=1, wL=1, wR=1):
     ## INPUTS
@@ -69,7 +70,7 @@ def parSkewNormal(x0, uL, uR, pX=0.5, pL=0.025, pR=0.975, wX=1, wL=1, wR=1):
         raise ValueError("Optimization failed")
 
 
-def pdf_values(x0, uL, uR, factor=3, num: int = 1000):
+def pdf_values(x0, uL, uR, factor=4, num: int = 1000):
     # Make a grid of values around the nominal values, and calculate the pdf for those values
 
     # If the error bars are equal, we have a normal distribution
@@ -247,19 +248,21 @@ def unfreeze_noise(mo, verbose=False):
     #    mo.components['PLRedNoise'].RNAMP.frozen = False
     #    mo.components['PLRedNoise'].RNIDX.frozen = False
 
-# x: float = 1.17
-# VLBI_uL: float = 0.05
-# VLBI_uR: float = 0.04
+def Wang_frame_tie(VLBI_pos_ICRF_spherical, Omega):
 
-# res = parSkewNormal(x=x, VLBI_uL=VLBI_uL, VLBI_uR=VLBI_uR)
+     # Transform the (RA,DEC) to cartesian components in the ICRF. Do the error propagation automatically.
+    # For AstroPy, see https://docs.astropy.org/en/latest/api/astropy.coordinates.spherical_to_cartesian.html
+    VLBI_pos_ICRF_xyz = umath_spherical_to_cartesian(VLBI_pos_ICRF_spherical)
+    x, y, z = spherical_to_cartesian(1.0, VLBI_pos_ICRF_spherical['dec'].nominal_value, VLBI_pos_ICRF_spherical['ra'].nominal_value)
 
-# x = np.linspace(1.0, 1.5, 1000)
-# y = skewnorm.pdf(x, a=res['a'], loc=res['loc'], scale=res['scale'])
+    # Transform to xyz coordinates from the ICRF to the SSB frame
+    matrix = np.matmul(Omega, np.array(list(VLBI_pos_ICRF_xyz.values())))
+    VLBI_pos_SSB_xyz = dict(zip(['x', 'y', 'z'], matrix))
+    SSB_x, SSB_y, SSB_z = np.array(np.dot(Omega, np.array([x, y, z])))
 
-# sns.set_style("darkgrid")
+    # Transform cartesian components in the SSB frame to (RA,DEC)
+    VLBI_pos_SSB_spherical = umath_cartesian_to_spherical(VLBI_pos_SSB_xyz)
+    r, dec, ra = cartesian_to_spherical(SSB_x, SSB_y, SSB_z)
 
-# plt.plot(x, y)
-# plt.title("SkewNormal PDF for $\Pi=1.17^{+0.04}_{-0.05}$")
-# plt.xlabel('$\Pi$')
-# plt.ylabel('Probability (unnormalized)')
-# plt.show()
+    return dict(ra=ufloat(ra.value, VLBI_pos_SSB_spherical["ra"].std_dev),
+                dec=ufloat(dec.value, VLBI_pos_SSB_spherical["dec"].std_dev))
