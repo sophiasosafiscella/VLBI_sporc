@@ -58,11 +58,12 @@ dec_v2 = to_uarray(dec_v + dcal_dec)  # DEC from VLBI in ICRF2
 # change the error bar of 0437
 for i in range(N_pulsars):
    if icrf_pos.index.tolist()[i] == 'J0437-4715':
+       # "In this case, we summed the quoted differential uncertainty and the uncertainty in the calibrator source in quadrature"
        ra_v2[i].std_dev = sqrt(ra_v[i].std_dev**2 + cal2_ra[i].std_dev**2 + Angle(0.8 * u.mas).rad**2)
        dec_v2[i].std_dev = sqrt(dec_v[i].std_dev**2 + cal2_dec[i].std_dev**2)
    else:
-       ra_v2[i].std_dev = ra_v[i].std_dev       # IMPORTANT: I'M VERY SUS OF THIS PART
-       dec_v2[i].std_dev = dec_v[i].std_dev
+       ra_v2[i].std_dev = ra_v[i].std_dev       # "We did not correct the published uncertainties to those in ICRF2"
+       dec_v2[i].std_dev = dec_v[i].std_dev     # IMPORTANT: I'M VERY SUS OF THIS PART
 
 # Turn the VLBI positions into dictionaries
 ra0 = {k: v for k, v in zip(psr_names, ra_v2)}    # This seems to agree with Wang's
@@ -98,6 +99,7 @@ for j, ephem in enumerate(timing_pos['ephem'].unique()):
 
     rat_err_sec = timing_pos.loc[timing_pos['ephem'] == ephem, 'ra_te']
     rat_err = {k: v for k, v in zip(rat_err_sec.index.tolist(), Angle(sec_to_deg(rat_err_sec.values), unit=u.degree).to(u.mas).value)}
+
     dect_err_sec = timing_pos.loc[timing_pos['ephem'] == ephem, 'dec_te']
     dect_err = {k: v for k, v in zip(dect_err_sec.index.tolist(), Angle(dect_err_sec.values, unit=u.arcsec).to(u.mas).value)}
 

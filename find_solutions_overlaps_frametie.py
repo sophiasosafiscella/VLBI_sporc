@@ -31,10 +31,10 @@ def circle(radius, center):
     return np.column_stack((x, y))
 
 
-def overlap_range(mu1, sigma1, mu2, sigma2, factor, grid_num):
+def overlap_range(x, y, factor, grid_num):
     # Calculate the bounds for both distributions
-    lower1, upper1 = mu1 - factor * sigma1, mu1 + factor * sigma1
-    lower2, upper2 = mu2 - factor * sigma2, mu2 + factor * sigma2
+    lower1, upper1 = x.nominal_value - factor * x.std_dev, x.nominal_value + factor * x.std_dev
+    lower2, upper2 = y.nominal_value - factor * y.std_dev, y.nominal_value + factor * y.std_dev
 
     # Calculate the overlap range
     lower_overlap = max(lower1, lower2)
@@ -79,23 +79,21 @@ def pm_overlap_range(mu_PMRA_timing, u_PMRA_timing, mu_PMDEC_timing, u_PMDEC_tim
         return None, None
 
 
-def find_solutions(PSR_name, data, eq_timing_model, factor: int = 3, grid_num: int = 10, plot=False):
+def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: int = 10, plot=False):
     VLBI_color = "rgba(0, 204, 150, 0.5)"  # px.colors.qualitative.Pastel1[2]
     timing_color = "rgba(99, 110, 250, 0.5)"  # px.colors.qualitative.Pastel1[1]
 
     # ------------------------------RAJ------------------------------
-    timing_RAJ = ufloat(Angle(eq_timing_model.RAJ.quantity).rad, Angle(eq_timing_model.RAJ.uncertainty).rad)
-    VLBI_RAJ = ufloat(Angle(data.loc[PSR_name, "VLBI_RAJ"]).rad, Angle(data.loc[PSR_name, "VLBI_RAJ_err"]).rad)
+    timing_RAJ = ufloat(Angle(timing_data.loc[PSR_name, "ra_t"]).rad, Angle(timing_data.loc[PSR_name, "ra_te"]).rad)
+    VLBI_RAJ = ufloat(Angle(VLBI_data.loc[PSR_name, "VLBI_RAJ"]).rad, Angle(VLBI_data.loc[PSR_name, "VLBI_RAJ_err"]).rad)
 
-    RAJ_overlap, RAJ_values = overlap_range(timing_RAJ.nominal_value, timing_RAJ.std_dev,
-                                            VLBI_RAJ.nominal_value, VLBI_RAJ.std_dev,  factor, grid_num)
+    RAJ_overlap, RAJ_values = overlap_range(timing_RAJ, VLBI_RAJ, factor, grid_num)
 
     # ------------------------------DECJ------------------------------
-    timing_DECJ = ufloat(Angle(eq_timing_model.DECJ.quantity).rad, Angle(eq_timing_model.DECJ.uncertainty).rad)
-    VLBI_DECJ = ufloat(Angle(data.loc[PSR_name, "VLBI_DECJ"]).rad, Angle(data.loc[PSR_name, "VLBI_DECJ_err"]).rad)
+    timing_DECJ = ufloat(Angle(timing_data.loc['dec_t']).rad, Angle(timing_data.loc[PSR_name, "dec_te"]).rad)
+    VLBI_DECJ = ufloat(Angle(VLBI_data.loc[PSR_name, "VLBI_DECJ"]).rad, Angle(VLBI_data.loc[PSR_name, "VLBI_DECJ_err"]).rad)
 
-    DECJ_overlap, DECJ_values = overlap_range(timing_DECJ.nominal_value, timing_DECJ.std_dev,
-                                              VLBI_DECJ.nominal_value, VLBI_DECJ.std_dev, factor, grid_num)
+    DECJ_overlap, DECJ_values = overlap_range(timing_DECJ, VLBI_DECJ, factor, grid_num)
 
     '''
     # ------------------------------PMRA------------------------------
@@ -120,8 +118,8 @@ def find_solutions(PSR_name, data, eq_timing_model, factor: int = 3, grid_num: i
     # error equal to either VLBI_uL or VLBI_uR:
 
     for error_side in ["uL", "uR"]:
-        VLBI_PMRA = ufloat(data.loc[PSR_name, "VLBI_PMRA"], data.loc[PSR_name, "VLBI_PMRA_" + error_side])
-        VLBI_PMDEC = ufloat(data.loc[PSR_name, "VLBI_PMDEC"], data.loc[PSR_name, "VLBI_PMDEC_" + error_side])
+        VLBI_PMRA = ufloat(VLBI_data.loc[PSR_name, "VLBI_PMRA"], VLBI_data.loc[PSR_name, "VLBI_PMRA_" + error_side])
+        VLBI_PMDEC = ufloat(VLBI_data.loc[PSR_name, "VLBI_PMDEC"], VLBI_data.loc[PSR_name, "VLBI_PMDEC_" + error_side])
         VLBI_PM = umath.sqrt(VLBI_PMDEC ** 2 + VLBI_PMRA ** 2)
 
         if error_side == "uL":
@@ -226,7 +224,6 @@ def find_solutions(PSR_name, data, eq_timing_model, factor: int = 3, grid_num: i
         plt.show()
 
     # ------------------------------Parallax------------------------------
-    VLBI_DECJ = ufloat(Angle(data.loc[PSR_name, "VLBI_DECJ"]).rad, Angle(data.loc[PSR_name, "VLBI_DECJ_err"]).rad)
 
     PX_overlap, PX_values = asymmetrical_overlap_range(eq_timing_model.PX.value, eq_timing_model.PX.uncertainty.value,
                                                        data.loc[PSR_name, "VLBI_PX"], data.loc[PSR_name, "VLBI_PX_uL"],
@@ -271,23 +268,17 @@ def find_solutions(PSR_name, data, eq_timing_model, factor: int = 3, grid_num: i
 if __name__ == "__main__":
 
     # File containing the timing and VLBI astrometric VLBI_data
-    VLBI_astrometric_data = pd.read_csv("./data/VLBI_astrometric_values.csv", index_col=0)
+    VLBI_astrometric_data = pd.read_csv("./data/NG_frame_tie/NG_msp_vlbi.csv", index_col=0)
+    timing_astrometric_data = pd.read_csv("./data/NG_frame_tie/NG_msp_timing.csv", index_col=0)
     PSR_list = VLBI_astrometric_data.index  # List of pulsars
 
     for PSR_name in PSR_list:
 
         print(f"Finding the possible timing solutions for {PSR_name}")
 
-        # Names of the .tim and .par files
-        timfile: str = glob.glob(f"./data/NG_15yr_dataset/tim/{PSR_name}*tim")[0]
-        parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}*par")[0]
-
-        # Load the timing model and convert to equatorial coordinates
-        ec_timing_model = get_model(parfile)  # Ecliptical coordiantes
-        eq_timing_model = ec_timing_model.as_ICRS(epoch=ec_timing_model.POSEPOCH.value)
 
         # FIND THE OVERLAP BETWEEN THE TIMING AND VLBI SOLUTIONS
-        solutions = find_solutions(PSR_name, VLBI_astrometric_data, eq_timing_model, grid_num=20, plot=True)
+        solutions = find_solutions(PSR_name, VLBI_astrometric_data, timing_astrometric_data, grid_num=20, plot=True)
 
         if solutions:
             overlap_df = pd.DataFrame(data=solutions, columns=["RA", "DEC", "PM", "PX"])
