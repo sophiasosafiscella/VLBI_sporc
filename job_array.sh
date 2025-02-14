@@ -1,5 +1,5 @@
 # Specify the path to the config file
-config=./results/overlaps/$1_overlap_frame_tie.txt
+config=./results/frame_tie/$1_overlap_frame_tie.txt
 PSR_name="$1"
 n_lines=$(wc -l < $config)
 n_lines=$((n_lines - 2))
