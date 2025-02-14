@@ -4,6 +4,7 @@ import pandas as pd
 import scipy
 from astropy.coordinates import Angle, spherical_to_cartesian, cartesian_to_spherical, ICRS, SkyCoord
 from astropy.time import Time
+import pint
 from pandas.core.frame import pandas
 from pint.models.timing_model import TimingModel
 from scipy.stats import norm, skewnorm
@@ -114,22 +115,32 @@ def draw_samples(x0, uL, uR, size=1000):
 
 
 def calculate_prior(timing_model, VLBI_data_file, PSR_name: str) -> float:
+    # Given the values of RAJ, DECJ, PMRA, PMDEC, PX that we have inserted into the timing model, calculate where they
+    # fall in the PDF distributions from the VLBI values
     VLBI_data = pd.read_csv(VLBI_data_file, index_col=0)
 
-    # ------------------------------Parallax------------------------------
-    PX_prior = pdf_value(x=timing_model.PX.quantity.value, x0=VLBI_data.loc[PSR_name, "VLBI_PX"],
-                         uL=VLBI_data.loc[PSR_name, "VLBI_PX_uL"], uR=VLBI_data.loc[PSR_name, "VLBI_PX_uR"])
+    # ------------------------------RAJ------------------------------
+    timing_RAJ = ufloat(Angle(timing_data.loc[PSR_name, "ra_t"]).rad, Angle(timing_data.loc[PSR_name, "ra_te"]).rad)
+    VLBI_RAJ = ufloat(Angle(VLBI_data.loc[PSR_name, "ra_v"]).rad, Angle(VLBI_data.loc[PSR_name, "ra_ve"]).rad)
+
+    RAJ_prior = pdf_values(x=timing_RAJ.nominal_value, x0=VLBI_RAJ.nominal_value, uL=VLBI_RAJ.std_dev, uR=VLBI_RAJ.std_dev)
+
+    # ------------------------------DECJ-----------------------------
+    timing_DECJ = ufloat(Angle(timing_data.loc[PSR_name, 'dec_t']).rad, Angle(timing_data.loc[PSR_name, "dec_te"]).rad)
+    VLBI_DECJ = ufloat(Angle(VLBI_data.loc[PSR_name, "dec_v"]).rad, Angle(VLBI_data.loc[PSR_name, "dec_ve"]).rad)
+
+    DECJ_prior = pdf_value(x=timing_DECJ.nominal_value, x0=VLBI_DECJ.nominal_value, uL=VLBI_DECJ.std_dev, uR=VLBI_DECJ.std_dev)
 
     # ------------------------------Proper Motion------------------------------
-    VLBI_DECJ = ufloat(Angle(VLBI_data.loc[PSR_name, "VLBI_DECJ"]).rad,
-                       Angle(VLBI_data.loc[PSR_name, "VLBI_DECJ_err"]).rad)
+#    VLBI_DECJ = ufloat(Angle(VLBI_data.loc[PSR_name, "VLBI_DECJ"]).rad, Angle(VLBI_data.loc[PSR_name, "VLBI_DECJ_err"]).rad)
 
     # For VLBI, sometimes the error bars are asymmetric. In order to propagate errors, we will do this twice, each time
     # assuming a symmetric error equal to either VLBI_uL or VLBI_uR:
     for error_side in ["uL", "uR"]:
-        VLBI_PMRA = ufloat(VLBI_data.loc[PSR_name, "VLBI_PMRA"], VLBI_data.loc[PSR_name, "VLBI_PMRA_" + error_side])
-        VLBI_PMDEC = ufloat(VLBI_data.loc[PSR_name, "VLBI_PMDEC"], VLBI_data.loc[PSR_name, "VLBI_PMDEC_" + error_side])
-        VLBI_PM = umath.sqrt(VLBI_PMDEC ** 2 + VLBI_PMRA ** 2 * (umath.cos(VLBI_DECJ) ** 2))
+        VLBI_PMRA = ufloat(VLBI_data.loc[PSR_name, "pmra_v"], VLBI_data.loc[PSR_name, "pmra_v_" + error_side])
+        VLBI_PMDEC = ufloat(VLBI_data.loc[PSR_name, "pmdec_v"], VLBI_data.loc[PSR_name, "pmdec_v_" + error_side])
+        VLBI_PM = umath.sqrt(VLBI_PMDEC ** 2 + VLBI_PMRA ** 2)
+#        VLBI_PM = umath.sqrt(VLBI_PMDEC ** 2 + VLBI_PMRA ** 2 * (umath.cos(VLBI_DECJ) ** 2))
 
         if error_side == "uL":
             VLBI_PM_uL = VLBI_PM.std_dev
@@ -139,14 +150,20 @@ def calculate_prior(timing_model, VLBI_data_file, PSR_name: str) -> float:
     # Calculate the total proper motion from the timing model
     timing_PMRA = ufloat(timing_model.PMRA.value, timing_model.PMRA.uncertainty.value)
     timing_PMDEC = ufloat(timing_model.PMDEC.value, timing_model.PMDEC.uncertainty.value)
-    timing_DECJ = ufloat(Angle(timing_model.DECJ.quantity).rad, Angle(timing_model.DECJ.uncertainty).rad)
-    timing_PM = umath.sqrt(timing_PMDEC ** 2 + timing_PMRA ** 2 * (umath.cos(timing_DECJ) ** 2))
+#    timing_DECJ = ufloat(Angle(timing_model.DECJ.quantity).rad, Angle(timing_model.DECJ.uncertainty).rad)
+#    timing_PM = umath.sqrt(timing_PMDEC ** 2 + timing_PMRA ** 2 * (umath.cos(timing_DECJ) ** 2))
+    timing_PM = umath.sqrt(timing_PMDEC ** 2 + timing_PMRA ** 2)
 
     # Calculate the prior for the timing value of the PM, given the PDF from the VLBI values
     PM_prior = pdf_value(x=timing_PM.nominal_value, x0=VLBI_PM.nominal_value, uL=VLBI_PM_uL, uR=VLBI_PM_uR)
 
+    # ------------------------------Parallax------------------------------
+    PX_prior = pdf_value(x=timing_model.PX.quantity.value, x0=VLBI_data.loc[PSR_name, "px_v"],
+                         uL=VLBI_data.loc[PSR_name, "px_v_uL"], uR=VLBI_data.loc[PSR_name, "px_v_uR"])
+
     # Calculate the joint probability distribution by multiplying the PDFs
-    return np.outer(PX_prior, PM_prior)
+#    return np.outer(PX_prior, PM_prior)
+    return RAJ_prior * DECJ_prior * PM_prior * PX_prior
 
 
 def replace_params(timing_model: TimingModel, timing_solution: pandas) -> TimingModel:
@@ -156,9 +173,11 @@ def replace_params(timing_model: TimingModel, timing_solution: pandas) -> Timing
     # or
     # {'pulsar name': (parameter value, )} for parameters that can't be fit
     params = {
-        "PMRA": (timing_solution.PMRA, 1, 0.0 * u.mas / u.yr),
-        "PMDEC": (timing_solution.PMDEC, 1, 0.0 * u.mas / u.yr),
-        "PX": (timing_solution.PX, 1, 0.0 * u.mas)
+        "RA": (timing_solution.RAJ, 1, 0 * pint.hourangle_second),
+        "DEC": (timing_solution.DECJ, 1, 0 * u.arcsec),
+        "PMRA": (timing_solution.PMRA, 1, 0  * u.mas / u.yr),
+        "PMDEC": (timing_solution.PMDEC, 1, 0 * u.mas / u.yr),
+        "PX": (timing_solution.PX, 1, 0 * u.mas)
     }
 
     # Assign the new parameters
@@ -168,7 +187,7 @@ def replace_params(timing_model: TimingModel, timing_solution: pandas) -> Timing
         if len(info) > 1:
             if info[1] == 1:
                 par.frozen = True  # Frozen means not fit.
-            par.uncertainty = info[2]
+            par.uncertainty = info[2]  # set parameter uncertainty
 
     # Set up and validate the new model
     timing_model.setup()

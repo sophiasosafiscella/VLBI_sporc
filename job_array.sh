@@ -1,5 +1,5 @@
 # Specify the path to the config file
-config=./results/overlaps/$1_overlap.txt
+config=./results/overlaps/$1_overlap_frame_tie.txt
 PSR_name="$1"
 n_lines=$(wc -l < $config)
 n_lines=$((n_lines - 2))
@@ -22,20 +22,26 @@ conda init bash
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate VLBI
 
+# Extract the RAJ for the current SLURM_ARRAY_TASK_ID
+RAJ=\$(awk -v ArrayTaskID=\${SLURM_ARRAY_TASK_ID} '\$1==ArrayTaskID {print \$2}' $config)
+
+# Extract the DECJ for the current SLURM_ARRAY_TASK_ID
+DECJ=\$(awk -v ArrayTaskID=\${SLURM_ARRAY_TASK_ID} '\$1==ArrayTaskID {print \$3}' $config)
+
 # Extract the PMRA for the current SLURM_ARRAY_TASK_ID
-PMRA=\$(awk -v ArrayTaskID=\${SLURM_ARRAY_TASK_ID} '\$1==ArrayTaskID {print \$2}' $config)
+PMRA=\$(awk -v ArrayTaskID=\${SLURM_ARRAY_TASK_ID} '\$1==ArrayTaskID {print \$4}' $config)
 
 # Extract the PMDEC for the current SLURM_ARRAY_TASK_ID
-PMDEC=\$(awk -v ArrayTaskID=\${SLURM_ARRAY_TASK_ID} '\$1==ArrayTaskID {print \$3}' $config)
+PMDEC=\$(awk -v ArrayTaskID=\${SLURM_ARRAY_TASK_ID} '\$1==ArrayTaskID {print \$4}' $config)
 
 # Extract the PX for the current SLURM_ARRAY_TASK_ID
-PX=\$(awk -v ArrayTaskID=\${SLURM_ARRAY_TASK_ID} '\$1==ArrayTaskID {print \$4}' $config)
+PX=\$(awk -v ArrayTaskID=\${SLURM_ARRAY_TASK_ID} '\$1==ArrayTaskID {print \$5}' $config)
 
 PSR_name="${PSR_name}"  # Correctly pass the variable into the script
 
-echo "\${PSR_name}, \${SLURM_ARRAY_TASK_ID}, PMRA = \${PMRA}, PMDEC = \${PMDEC}, PX \${PX}." >> output.txt
+echo "\${PSR_name}, \${SLURM_ARRAY_TASK_ID}, RAJ = \${RAJ}, DECJ = \${DECJ}, PMRA = \${PMRA}, PMDEC = \${PMDEC}, PX \${PX}." >> output.txt
 
-srun --mem-per-cpu=10g python3 -u calculate_posterior.py \${PSR_name} \${SLURM_ARRAY_TASK_ID} \${PMRA} \${PMDEC} \${PX}
+srun --mem-per-cpu=10g python3 -u calculate_posterior.py \${PSR_name} \${SLURM_ARRAY_TASK_ID} \${RAJ} \${DECJ} \${PMRA} \${PMDEC} \${PX}
 
 EOF
 

@@ -19,17 +19,18 @@ from VLBI_utils import calculate_prior, replace_params
 import glob
 import sys
 
-def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, astrometric_data_file, resume=False, plot=False):
+
+def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, VLBI_astrometric_data_file, resume=False, plot=False):
     sns.set_theme(context="paper", style="darkgrid", font_scale=1.5)
 
     print(f"Processing iteration {timing_solution.Index} of {PSR_name}")
 
-    # Load the TOAs
-    toas = get_TOAs(timfile, planets=True)
-
     # Load the timing model and convert to equatorial coordinates
     ec_timing_model = get_model(parfile)  # Ecliptical coordiantes
     eq_timing_model = ec_timing_model.as_ICRS(epoch=ec_timing_model.POSEPOCH.value)
+
+    # Load the TOAs
+    toas = get_TOAs(timfile, planets=True, ephem=eq_timing_model.EPHEM.value)
 
     # Plot the original timing residuals
     if plot:
@@ -78,7 +79,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, a
         print("Done!")
 
         # Calculate the posterior for this model and TOAs
-        posterior = calculate_prior(eq_timing_model, astrometric_data_file, PSR_name) * final_fit_resids.lnlikelihood()
+        posterior = calculate_prior(eq_timing_model, VLBI_astrometric_data_file, PSR_name) * final_fit_resids.lnlikelihood()
 
     except LinAlgError:
         print(f"LinAlgError at iteration {timing_solution.Index}")
@@ -110,22 +111,23 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, a
 
 
 if __name__ == "__main__":
-    PSR_name, idx, PMRA, PMDEC, PX = sys.argv[1:]  # Timing solution index and parameters
+    PSR_name, idx, RAJ, DECJ, PMRA, PMDEC, PX = sys.argv[1:]  # Timing solution index and parameters
 
-    timing_solution_dict = {"Index": idx, "PMRA": PMRA, "PMDEC": PMDEC, "PX": PX}
+    timing_solution_dict = {"Index": idx, "RAJ": RAJ, "DECJ": DECJ, "PMRA": PMRA, "PMDEC": PMDEC, "PX": PX}
+    # Convert dictionary to DataFrame
     for t in pd.DataFrame(timing_solution_dict, columns=list(timing_solution_dict.keys())[1:], index=[timing_solution_dict['Index']]).itertuples(index=True):
         timing_solution = t
 
-    posteriors_dir: str = f"./results/timing_posteriors/{PSR_name}"
-    astrometric_data_file: str = "./data/astrometric_values.csv"
+    posteriors_dir: str = f"./results/timing_posteriors_frame_tie/{PSR_name}"
+    VLBI_astrometric_data_file: str = "./data/calibrated_vlbi_astrometric_data.csv"
 
     # Names of the .tim and .par files
-    timfile: str = glob.glob(f"./data/NG_15yr_dataset/tim/{PSR_name}*tim")[0]
-    parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}*par")[0]
+    timfile: str = glob.glob(f"./data/NG_15yr_dataset/tim/{PSR_name}_PINT*tim")[0]
+    parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}_PINT*par")[0]
 
     # Calculate the posterior
-    posterior = calculate_post(PSR_name, timing_solution, timfile, parfile, astrometric_data_file, resume=True, plot=False)[0][0]
+    posterior = calculate_post(PSR_name, timing_solution, timfile, parfile, VLBI_astrometric_data_file, resume=True, plot=False)[0][0]
 
     # Save the timing solution with its posterior
-    res_np = np.asarray([idx, PMRA, PMDEC, PX, posterior])
+    res_np = np.asarray([idx, RAJ, DECJ, PMRA, PMDEC, PX, posterior])
     np.save(posteriors_dir + "/" + str(idx) + "_posterior.npy", res_np)
