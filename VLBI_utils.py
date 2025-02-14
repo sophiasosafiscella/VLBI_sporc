@@ -173,8 +173,8 @@ def replace_params(timing_model: TimingModel, timing_solution: pandas) -> Timing
     # or
     # {'pulsar name': (parameter value, )} for parameters that can't be fit
     params = {
-        "RA": (timing_solution.RAJ, 1, 0 * pint.hourangle_second),
-        "DEC": (timing_solution.DECJ, 1, 0 * u.arcsec),
+        "RAJ": (timing_solution.RAJ, 1, 0 * pint.hourangle_second),
+        "DECJ": (timing_solution.DECJ, 1, 0 * u.arcsec),
         "PMRA": (timing_solution.PMRA, 1, 0  * u.mas / u.yr),
         "PMDEC": (timing_solution.PMDEC, 1, 0 * u.mas / u.yr),
         "PX": (timing_solution.PX, 1, 0 * u.mas)
