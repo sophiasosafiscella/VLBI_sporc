@@ -1,3 +1,4 @@
+import os
 import sys
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -58,9 +59,13 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
     # Perform initial fit
     initial_fit = pint.fitter.DownhillGLSFitter(toas, eq_timing_model)
     try:
-        initial_fit.fit_toas(maxiter=5)
-    except LinAlgError:
-        print(f"LinAlgError at iteration {timing_solution.Index}")
+        initial_fit.fit_toas()
+    except:
+        print("Timing solution failed")
+        return [[0.0]]
+
+#    except LinAlgError:
+#        print(f"LinAlgError at iteration {timing_solution.Index}")
 
     # Re-run noise
     print("Re-running noise")
@@ -73,7 +78,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
     final_fit = pint.fitter.DownhillGLSFitter(toas, newmodel)
     try:
         print("Fitting the new model")
-        final_fit.fit_toas(maxiter=5)
+        final_fit.fit_toas()
         final_fit_resids = final_fit.resids
         final_fit.model.write_parfile("./results/new_fits/" + PSR_name + "/solution_" + str(timing_solution.Index) + "_new.par")  # Save the new .par fil
         print("Done!")
@@ -81,9 +86,13 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
         # Calculate the posterior for this model and TOAs
         posterior = calculate_prior(eq_timing_model, VLBI_astrometric_data_file, PSR_name) * final_fit_resids.lnlikelihood()
 
-    except LinAlgError:
-        print(f"LinAlgError at iteration {timing_solution.Index}")
-        posterior = [[0.0]]
+    except:
+        print("Timing solution failed")
+        return [[0.0]]
+
+#    except LinAlgError:
+#        print(f"LinAlgError at iteration {timing_solution.Index}")
+#        posterior = [[0.0]]
 
     # Output the results
 #    res_df = pd.DataFrame({'PMRA': [timing_solution.PMRA], 'PMDEC': [timing_solution.PMDEC],
@@ -112,6 +121,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 
 if __name__ == "__main__":
     PSR_name, idx, RAJ, DECJ, PMRA, PMDEC, PX = sys.argv[1:]  # Timing solution index and parameters
+#    PSR_name, idx, RAJ, DECJ, PMRA, PMDEC, PX = "J0030+0451", 1, 0.13289409215870956, 0.08484101392961867, 2.894743537590548, -6.335691016639032, 0.06706353456507053
 
     timing_solution_dict = {"Index": idx, "RAJ": RAJ, "DECJ": DECJ, "PMRA": PMRA, "PMDEC": PMDEC, "PX": PX}
     # Convert dictionary to DataFrame
@@ -119,6 +129,9 @@ if __name__ == "__main__":
         timing_solution = t
 
     posteriors_dir: str = f"./results/timing_posteriors_frame_tie/{PSR_name}"
+    if not os.path.exists(posteriors_dir):
+        os.makedirs(posteriors_dir)
+
     VLBI_astrometric_data_file: str = "./data/calibrated_vlbi_astrometric_data.csv"
 
     # Names of the .tim and .par files
@@ -130,4 +143,5 @@ if __name__ == "__main__":
 
     # Save the timing solution with its posterior
     res_np = np.asarray([idx, RAJ, DECJ, PMRA, PMDEC, PX, posterior])
+    print(res_np)
     np.save(posteriors_dir + "/" + str(idx) + "_posterior.npy", res_np)
