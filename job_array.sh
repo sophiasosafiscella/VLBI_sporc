@@ -1,43 +1,58 @@
+#!/bin/bash
+
 # Specify the path to the config file
 config=./results/frame_tie/$1_overlap_frame_tie.txt
 PSR_name="$1"
-n_lines=$(wc -l < $config)
+
+# Check if the file exists
+if [[ ! -f "$config" ]]; then
+    echo "Error: Config file $config does not exist."
+    exit 1
+fi
+
+# Get number of lines, ensuring a valid job array
+n_lines=$(wc -l < "$config")
 n_lines=$((n_lines - 2))
+
+if [[ $n_lines -lt 0 ]]; then
+    echo "Error: Invalid job array size. The file $config may have insufficient lines."
+    exit 1
+fi
+
+# Generate the correct Slurm array specification
+if [[ $n_lines -gt 0 ]]; then
+    array_spec="--array=0-${n_lines}"
+else
+    echo "Error: No valid jobs to submit. Check your input file."
+    exit 1
+fi
 
 # Generate the Slurm script with the correct array size
 cat <<EOF > job_script.sh
 #!/bin/bash -l
 
-#SBATCH --job-name=VLBI         # Name of your job
-#SBATCH --account=vlbi          # Your Slurm account
-#SBATCH --partition=tier3       # Run on tier3
-#SBATCH --output=%x_%A_%a.out      # Output file
-#SBATCH --error=%x_%A_%a.err       # Error file
-#SBATCH --time=0-20:00:00       # 10 minute time limit
-#SBATCH --ntasks=1              # 1 tasks (i.e. processes)
-#SBATCH --mem-per-cpu=10g        # 1GB RAM per CPU
-#SBATCH --array=0-${n_lines}    # Array size
+#SBATCH --job-name=VLBI
+#SBATCH --account=vlbi
+#SBATCH --partition=tier3
+#SBATCH --output=%x_%A_%a.out
+#SBATCH --error=%x_%A_%a.err
+#SBATCH --time=0-20:00:00
+#SBATCH --ntasks=1
+#SBATCH --mem-per-cpu=10g
+#SBATCH ${array_spec}
 
 conda init bash
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate VLBI
 
-# Extract the RAJ for the current SLURM_ARRAY_TASK_ID
+# Extract parameters for the current SLURM_ARRAY_TASK_ID
 RAJ=\$(awk -v ArrayTaskID=\${SLURM_ARRAY_TASK_ID} '\$1==ArrayTaskID {print \$2}' $config)
-
-# Extract the DECJ for the current SLURM_ARRAY_TASK_ID
 DECJ=\$(awk -v ArrayTaskID=\${SLURM_ARRAY_TASK_ID} '\$1==ArrayTaskID {print \$3}' $config)
-
-# Extract the PMRA for the current SLURM_ARRAY_TASK_ID
 PMRA=\$(awk -v ArrayTaskID=\${SLURM_ARRAY_TASK_ID} '\$1==ArrayTaskID {print \$4}' $config)
+PMDEC=\$(awk -v ArrayTaskID=\${SLURM_ARRAY_TASK_ID} '\$1==ArrayTaskID {print \$5}' $config)
+PX=\$(awk -v ArrayTaskID=\${SLURM_ARRAY_TASK_ID} '\$1==ArrayTaskID {print \$6}' $config)
 
-# Extract the PMDEC for the current SLURM_ARRAY_TASK_ID
-PMDEC=\$(awk -v ArrayTaskID=\${SLURM_ARRAY_TASK_ID} '\$1==ArrayTaskID {print \$4}' $config)
-
-# Extract the PX for the current SLURM_ARRAY_TASK_ID
-PX=\$(awk -v ArrayTaskID=\${SLURM_ARRAY_TASK_ID} '\$1==ArrayTaskID {print \$5}' $config)
-
-PSR_name="${PSR_name}"  # Correctly pass the variable into the script
+PSR_name="${PSR_name}"  # Ensure variable is correctly passed
 
 echo "\${PSR_name}, \${SLURM_ARRAY_TASK_ID}, RAJ = \${RAJ}, DECJ = \${DECJ}, PMRA = \${PMRA}, PMDEC = \${PMDEC}, PX \${PX}." >> output.txt
 
