@@ -1,4 +1,4 @@
-,ref,equinox,epoch_v,ra_v,ra_ve,dec_v,dec_ve,pmra_v,pmra_v_uR,pmra_v_uL,pmdec_v,pmra_v_uR,pmdec_v_uL,px_v,px_v_uR,px_v_uL
+,ref,equinox,epoch_v,ra_v,ra_ve,dec_v,dec_ve,pmra_v,pmra_v_uR,pmra_v_uL,pmdec_v,pmra_dec_uR,pmdec_v_uL,px_v,px_v_uR,px_v_uL
 J0030+0451,MSPSR Pi,J2000.0,57849.0,00h30m27.42502s,0h0m0.00006s,"+04°51'39.7159""","0°0'0.0002""",-6.13,0.07,0.07,0.34,0.15,0.16,3.02,0.07,0.07
 J0437-4715,Deller 2008,J2000.0,54100.0,04h37m15.883250s,0h0m0.000003s,"-47°15'09.031863""","0°0'0.000037""",121.679,0.052,0.052,-71.820,0.086,0.086,6.396,0.054,0.054
 J0610-2100,MSPSR Pi,J2000.0,57757.0,06h10m13.60053s,0h0m0.00008s,"-21°00'27.7923""","0°0'0.0002""",9.1,0.01,0.01,15.96,0.25,0.24,0.73,0.10,0.10

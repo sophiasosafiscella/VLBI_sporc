@@ -1,12 +1,10 @@
 import numpy as np
 import pandas as pd
-import contextlib
-import pint.fitter
 from pint.models import get_model
-from pint.toa import get_TOAs
 import astropy.units as u
 from astropy.time import Time
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import Angle
+from math import sqrt
 import glob
 import sys
 
@@ -15,7 +13,7 @@ PSR_list = VLBI_data.index.tolist()
 n_psr = len(PSR_list)
 new_epochs = VLBI_data['epoch_v'].to_numpy()
 
-RA_list, RA_err_list, DEC_list, DEC_err_list, EPHEM_list = [np.empty(n_psr, dtype=object) for _ in range(5)]
+RA_list, RA_err_list, DEC_list, DEC_err_list, EPHEM_list, equinox_list = [np.empty(n_psr, dtype=object) for _ in range(6)]
 PMRA_list, PMRA_err_list, PMDEC_list, PMDEC_err_list, PX_list, PX_err_list = [np.empty(n_psr, dtype=float) for _ in range(6)]
 POSEPOCH_list = np.empty(n_psr, dtype=float)
 
@@ -30,13 +28,22 @@ for k, psr in enumerate(PSR_list):
     ec_timing_model = get_model(parfile)                                # Ecliptical coordiantes
     eq = ec_timing_model.as_ICRS(epoch=ec_timing_model.POSEPOCH.value)  # Equatorial coordinates
 
+    # Compute time difference
+    time_diff = Time(new_epochs[k], format='mjd') - Time(eq.POSEPOCH.value, format='mjd')  # This is a TimeDelta object
+    timespan_in_years = time_diff.to_value('year') * u.year
+
     # Update the epoch to match that of VLBI
     eq.change_posepoch(new_epochs[k])
 
+    # Update positions
     RA_list[k] = eq.RAJ.quantity
-    RA_err_list[k] = eq.RAJ.uncertainty
     DEC_list[k] = eq.DECJ.quantity
-    DEC_err_list[k] = eq.DECJ.uncertainty
+
+    # Update uncertainties, taking into account that when we apply proper motion,
+    # the components of proper motion also have errors that will be propagated into the positions
+    RA_err_list[k] = Angle(sqrt(Angle(eq.RAJ.uncertainty, unit=u.hourangle).rad**2 + Angle(eq.PMRA.uncertainty * timespan_in_years, unit=u.mas).rad**2), unit=u.rad).to_string(unit=u.hourangle)
+    DEC_err_list[k] = Angle(sqrt(Angle(eq.DECJ.uncertainty, unit=u.degree).rad**2 + Angle(eq.PMDEC.uncertainty * timespan_in_years, unit=u.mas).rad**2), unit=u.rad).to_string(unit=u.degree)
+
 
     PMRA_list[k] = eq.PMRA.value
     PMRA_err_list[k] = eq.PMRA.uncertainty.value
@@ -48,12 +55,13 @@ for k, psr in enumerate(PSR_list):
 
     POSEPOCH_list[k] = eq.POSEPOCH.value
     EPHEM_list[k] = eq.EPHEM.value
+    equinox_list[k] = "J2000.0"
 
 
-data = pd.DataFrame({'epoch_t': POSEPOCH_list, 'ephem': EPHEM_list,
-                     't_RAJ': RA_list, 't_RAJ_err': RA_err_list, 't_DECJ': DEC_list, 't_DECJ_err': DEC_err_list,
-                     't_PMRA': PMRA_list, 't_PMRA_err': PMRA_err_list, 't_PMDEC': PMDEC_list, 't_PMDEC_err': PMDEC_err_list,
-                     't_PX': PX_list, 't_PX_err': PX_err_list}, index=PSR_list)
+data = pd.DataFrame({'epoch_t': POSEPOCH_list, 'ephem': EPHEM_list, 'equinox': equinox_list,
+                     'ra_t': RA_list, 'ra_te': RA_err_list, 'dec_t': DEC_list, 'dec_te': DEC_err_list,
+                     'pmra_t': PMRA_list, 'pmra_te': PMRA_err_list, 'pmdec_t': PMDEC_list, 'pmdec_te': PMDEC_err_list,
+                     'px_t': PX_list, 'px_te': PX_err_list}, index=PSR_list)
 
-data.to_csv("./data/timing_astrometric_data.csv")
+data.to_csv("./data/timing_astrometric_data_updated.csv")
 

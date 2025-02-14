@@ -44,7 +44,7 @@ dcal_ra = rfc_cal_ra - og_cal_ra
 dcal_dec = rfc_cal_dec - og_cal_dec
 
 #---------------------------------------------
-# Read in the pulsar VLBI positions in ICRF 1
+# Read in the pulsar VLBI positions in their original catalogues
 #---------------------------------------------
 vlbi_pos = pd.read_table(path + 'NG_msp_vlbi.csv', header=0, index_col=0, sep=',', comment='#')
 psr_names = vlbi_pos.index.tolist()

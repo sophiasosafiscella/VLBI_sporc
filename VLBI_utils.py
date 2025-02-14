@@ -248,7 +248,7 @@ def unfreeze_noise(mo, verbose=False):
     #    mo.components['PLRedNoise'].RNAMP.frozen = False
     #    mo.components['PLRedNoise'].RNIDX.frozen = False
 
-def Wang_frame_tie(VLBI_pos_ICRF_spherical, Omega):
+def Wang_frame_tie(VLBI_pos_ICRF_spherical, Omega, astropy):
 
      # Transform the (RA,DEC) to cartesian components in the ICRF. Do the error propagation automatically.
     # For AstroPy, see https://docs.astropy.org/en/latest/api/astropy.coordinates.spherical_to_cartesian.html
@@ -262,7 +262,11 @@ def Wang_frame_tie(VLBI_pos_ICRF_spherical, Omega):
 
     # Transform cartesian components in the SSB frame to (RA,DEC)
     VLBI_pos_SSB_spherical = umath_cartesian_to_spherical(VLBI_pos_SSB_xyz)
-    r, dec, ra = cartesian_to_spherical(SSB_x, SSB_y, SSB_z)
+    r, dec, ra = cartesian_to_spherical(SSB_x, SSB_y, SSB_z)  # ra and dec are returned in radians
 
-    return dict(ra=ufloat(ra.value, VLBI_pos_SSB_spherical["ra"].std_dev),
-                dec=ufloat(dec.value, VLBI_pos_SSB_spherical["dec"].std_dev))
+    if astropy:
+        return dict(ra=ufloat(ra.value, VLBI_pos_SSB_spherical["ra"].std_dev),
+                    dec=ufloat(dec.value, VLBI_pos_SSB_spherical["dec"].std_dev))
+    else:
+        return dict(ra=ufloat(VLBI_pos_SSB_spherical["ra"].nominal_value, VLBI_pos_SSB_spherical["ra"].std_dev),
+                    dec=ufloat(VLBI_pos_SSB_spherical["dec"].nominal_value, VLBI_pos_SSB_spherical["dec"].std_dev))
