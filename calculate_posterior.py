@@ -57,9 +57,11 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
     eq_timing_model = replace_params(eq_timing_model, timing_solution)
 
     # Perform initial fit
+    print("Performing the initial fit...")
     initial_fit = pint.fitter.DownhillGLSFitter(toas, eq_timing_model)
     try:
         initial_fit.fit_toas(maxiter=5)
+        print("Initial fit done.")
     except:
         print("Timing solution failed")
         return [[0.0]]
@@ -81,7 +83,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
         final_fit.fit_toas()
         final_fit_resids = final_fit.resids
         final_fit.model.write_parfile("./results/new_fits/" + PSR_name + "/solution_" + str(timing_solution.Index) + "_new.par")  # Save the new .par fil
-        print("Done!")
+        print("New model fitting done.")
 
         # Calculate the posterior for this model and TOAs
         posterior = calculate_prior(eq_timing_model, VLBI_astrometric_data_file, PSR_name) * final_fit_resids.lnlikelihood()
@@ -120,8 +122,8 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 
 
 if __name__ == "__main__":
-#    PSR_name, idx, RAJ, DECJ, PMRA, PMDEC, PX = sys.argv[1:]  # Timing solution index and parameters
-    PSR_name, idx, RAJ, DECJ, PMRA, PMDEC, PX = "J0030+0451", 0, "0:30:27.4249447", "4:51:39.7153", 2.8773835086748143, -6.32827611563642, 0.06706353456507053
+    PSR_name, idx, RAJ, DECJ, PMRA, PMDEC, PX = sys.argv[1:]  # Timing solution index and parameters
+#    PSR_name, idx, RAJ, DECJ, PMRA, PMDEC, PX = "J0030+0451", 0, "0:30:27.4249447", "4:51:39.7153", 2.8773835086748143, -6.32827611563642, 0.06706353456507053
     #PSR_name, idx, RAJ, DECJ, PMRA, PMDEC, PX = "J0030+0451", 1400, "0:30:27.42512704", "4:51:39.7153", 2.8773835086748143, -6.2578345561116056, 0.06706353456507053
 
     timing_solution_dict = {"Index": idx, "RAJ": RAJ, "DECJ": DECJ, "PMRA": PMRA, "PMDEC": PMDEC, "PX": PX}
@@ -140,7 +142,7 @@ if __name__ == "__main__":
     parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}_PINT*par")[0]
 
     # Calculate the posterior
-    posterior = calculate_post(PSR_name, timing_solution, timfile, parfile, VLBI_astrometric_data_file, resume=True, plot=False)[0][0]
+    posterior = calculate_post(PSR_name, timing_solution, timfile, parfile, VLBI_astrometric_data_file, resume=False, plot=False)[0][0]
 
     # Save the timing solution with its posterior
     res_np = np.asarray([idx, RAJ, DECJ, PMRA, PMDEC, PX, posterior])
