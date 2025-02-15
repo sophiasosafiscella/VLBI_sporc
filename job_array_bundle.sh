@@ -2,7 +2,7 @@
 config=./results/frame_tie/$1_overlap_frame_tie.txt
 PSR_name="$1"
 n_lines=$(wc -l < "$config")
-n_lines=$((n_lines - 2))  # Adjust for header/footer lines if needed
+n_lines=$((n_lines - 1))  # Adjust for the header (subtract 1 instead of 2)
 
 # Get the maximum allowed job array size
 MaxArraySize=10001  # Replace this with `scontrol show config | grep MaxArraySize | awk '{print $NF}'` if needed
@@ -38,14 +38,15 @@ config="${config}"
 PSR_name="${PSR_name}"
 
 if [[ "$bundle_mode" == "true" ]]; then
-    start=\$(( SLURM_ARRAY_TASK_ID * $lines_per_job + 1 ))
+    start=\$(( SLURM_ARRAY_TASK_ID * $lines_per_job + 2 ))  # Start at line 2
     end=\$(( start + $lines_per_job - 1 ))
-    [[ \$end -gt $n_lines ]] && end=$n_lines
+    [[ \$end -gt $((n_lines + 1)) ]] && end=$((n_lines + 1))  # Account for header
 else
-    start=\$(( SLURM_ARRAY_TASK_ID + 1 ))  # Adjust for zero-based index
+    start=\$(( SLURM_ARRAY_TASK_ID + 2 ))  # Adjust for zero-based index and header
     end=\$start
 fi
 
+# Read only from line 2 onwards
 awk "NR>=\$start && NR<=\$end" "\$config" | while read -r ArrayTaskID RAJ DECJ PMRA PMDEC PX; do
     echo "\${PSR_name}, \${ArrayTaskID}, RAJ = \${RAJ}, DECJ = \${DECJ}, PMRA = \${PMRA}, PMDEC = \${PMDEC}, PX = \${PX}." >> output.txt
 
