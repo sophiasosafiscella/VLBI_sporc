@@ -181,10 +181,10 @@ def replace_params(timing_model: TimingModel, new_timing_solution: pandas) -> Ti
         "PX": (new_timing_solution.PX, 1, 0 * timing_model.PX.units)
     }
 
-    print(f"RAJ before = {timing_model.RAJ.quantity}")
+    print(f"RAJ before = {Angle(timing_model.RAJ.quantity, unit=u.hourangle).to_string(unit=u.hourangle, sep=':')}")
     print(f"RAJ after  = {new_timing_solution.RAJ}")
     print(" ")
-    print(f"DECJ before = {timing_model.DECJ.quantity}")
+    print(f"DECJ before = {Angle(timing_model.DECJ.quantity, unit=u.degree).to_string(unit=u.degree, sep=':')}")
     print(f"DECJ after  = {new_timing_solution.DECJ}")
     print(" ")
     print(f"PMRA before = {timing_model.PMRA.quantity}")
