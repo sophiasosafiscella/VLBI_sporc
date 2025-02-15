@@ -55,5 +55,5 @@ done
 
 EOF
 
-# Submit the job
+# Submit the job!
 sbatch job_script.sh
