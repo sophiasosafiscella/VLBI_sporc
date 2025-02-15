@@ -73,8 +73,8 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
     # Re-run noise
     print("Re-running noise")
     noise_utils.model_noise(eq_timing_model, toas, vary_red_noise=True, n_iter=int(5e4), using_wideband=False,
-                            resume=resume, run_noise_analysis=True, base_op_dir=f"noisemodel_linear_sd/timing_solution_{timing_solution.Index}")
-    newmodel = noise_utils.add_noise_to_model(eq_timing_model, save_corner=False, base_dir=f"noisemodel_linear_sd/timing_solution_{timing_solution.Index}")
+                            resume=resume, run_noise_analysis=True, base_op_dir=f"./noisemodel_linear_sd/timing_solution_{timing_solution.Index}")
+    newmodel = noise_utils.add_noise_to_model(eq_timing_model, save_corner=False, base_dir=f"./noisemodel_linear_sd/timing_solution_{timing_solution.Index}")
     print("Done!")
 
     # Final fit

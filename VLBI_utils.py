@@ -176,8 +176,8 @@ def replace_params(timing_model: TimingModel, timing_solution: pandas) -> Timing
     params = {
         "RAJ": (timing_solution.RAJ, 1, 0 * pint.hourangle_second),
         "DECJ": (timing_solution.DECJ, 1, 0 * u.arcsec),
-        "PMRA": (timing_solution.PMRA * timing_model.PMRA.units, 1, 0  * timing_model.PMRA.units),
-        "PMDEC": (timing_solution.PMDEC * timing_model.PMDEC.units, 1, 0 * timing_model.PMDEC.units),
+        "PMRA": (timing_solution.PMRA, 1, 0  * timing_model.PMRA.units),
+        "PMDEC": (timing_solution.PMDEC, 1, 0 * timing_model.PMDEC.units),
         "PX": (timing_solution.PX * timing_model.PX.units, 1, 0 * timing_model.PX.units)
     }
 
