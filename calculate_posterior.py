@@ -121,7 +121,8 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 
 if __name__ == "__main__":
 #    PSR_name, idx, RAJ, DECJ, PMRA, PMDEC, PX = sys.argv[1:]  # Timing solution index and parameters
-    PSR_name, idx, RAJ, DECJ, PMRA, PMDEC, PX = "J0030+0451", 0, 0.13289409215870956, 0.08484101392961867, 2.8773835086748143, -6.2578345561116056, 0.06706353456507053
+    PSR_name, idx, RAJ, DECJ, PMRA, PMDEC, PX = "J0030+0451", 0, "0:30:27.4249447", "4:51:39.7153", 2.8773835086748143, -6.32827611563642, 0.06706353456507053
+    #PSR_name, idx, RAJ, DECJ, PMRA, PMDEC, PX = "J0030+0451", 1400, "0:30:27.42512704", "4:51:39.7153", 2.8773835086748143, -6.2578345561116056, 0.06706353456507053
 
     timing_solution_dict = {"Index": idx, "RAJ": RAJ, "DECJ": DECJ, "PMRA": PMRA, "PMDEC": PMDEC, "PX": PX}
     # Convert dictionary to DataFrame

@@ -180,8 +180,6 @@ def replace_params(timing_model: TimingModel, timing_solution: pandas) -> Timing
         "PX": (timing_solution.PX * timing_model.PX.units, 1, 0 * timing_model.PX.units)
     }
 
-    print("New solution parameters:" + str(params))
-
     # Assign the new parameters
     for name, info in params.items():
         par = getattr(timing_model, name)  # Get parameter object from name
@@ -194,6 +192,10 @@ def replace_params(timing_model: TimingModel, timing_solution: pandas) -> Timing
     # Set up and validate the new model
     timing_model.setup()
     timing_model.validate()
+
+    print("New timing model")
+    print(timing_model.RAJ.quantity)
+    print(timing_model.DECJ.quantity)
 
     return timing_model
 
