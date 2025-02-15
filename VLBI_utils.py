@@ -2,6 +2,7 @@ import astropy.units as u
 import numpy as np
 import pandas as pd
 import scipy
+import astropy
 from astropy.coordinates import Angle, spherical_to_cartesian, cartesian_to_spherical, ICRS, SkyCoord
 from astropy.time import Time
 import pint

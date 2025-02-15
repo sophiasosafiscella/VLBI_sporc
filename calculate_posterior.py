@@ -14,6 +14,7 @@ from pint.residuals import Residuals
 import pint.fitter
 from pint_pal import noise_utils
 
+import astropy
 import astropy.units as u
 
 from VLBI_utils import calculate_prior, replace_params
