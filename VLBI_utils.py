@@ -167,19 +167,34 @@ def calculate_prior(timing_model, VLBI_data_file, PSR_name: str) -> float:
     return RAJ_prior * DECJ_prior * PM_prior * PX_prior
 
 
-def replace_params(timing_model: TimingModel, timing_solution: pandas) -> TimingModel:
+def replace_params(timing_model: TimingModel, new_timing_solution: pandas) -> TimingModel:
     # We build a dictionary with a key for each parameter we want to set.
     # The dictionary entries can be either
     #  {'pulsar name': (parameter value, TEMPO_Fit_flag, uncertainty)} akin to a TEMPO par file form
     # or
     # {'pulsar name': (parameter value, )} for parameters that can't be fit
     params = {
-        "RAJ": (timing_solution.RAJ, 1, 0 * pint.hourangle_second),
-        "DECJ": (timing_solution.DECJ, 1, 0 * u.arcsec),
-        "PMRA": (timing_solution.PMRA, 1, 0  * timing_model.PMRA.units),
-        "PMDEC": (timing_solution.PMDEC, 1, 0 * timing_model.PMDEC.units),
-        "PX": (timing_solution.PX, 1, 0 * timing_model.PX.units)
+        "RAJ": (new_timing_solution.RAJ, 1, 0 * pint.hourangle_second),
+        "DECJ": (new_timing_solution.DECJ, 1, 0 * u.arcsec),
+        "PMRA": (new_timing_solution.PMRA, 1, 0 * timing_model.PMRA.units),
+        "PMDEC": (new_timing_solution.PMDEC, 1, 0 * timing_model.PMDEC.units),
+        "PX": (new_timing_solution.PX, 1, 0 * timing_model.PX.units)
     }
+
+    print(f"RAJ before = {timing_model.RAJ.quantity}")
+    print(f"RAJ after  = {new_timing_solution.RAJ}")
+    print(" ")
+    print(f"DECJ before = {timing_model.DECJ.quantity}")
+    print(f"DECJ after  = {new_timing_solution.DECJ}")
+    print(" ")
+    print(f"PMRA before = {timing_model.PMRA.quantity}")
+    print(f"PMRA after  = {new_timing_solution.PMRA}")
+    print(" ")
+    print(f"PMDEC before = {timing_model.PMDEC.quantity}")
+    print(f"PMDEC after  = {new_timing_solution.PMDEC}")
+    print(" ")
+    print(f"PX before = {timing_model.PX.quantity}")
+    print(f"PX after  = {new_timing_solution.PX}")
 
     # Assign the new parameters
     for name, info in params.items():
