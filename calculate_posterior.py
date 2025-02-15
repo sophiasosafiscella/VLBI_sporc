@@ -129,11 +129,11 @@ if __name__ == "__main__":
 
     timing_solution_dict = {"Index": idx, "RAJ": RAJ, "DECJ": DECJ, "PX": PX, "PMRA": PMRA, "PMDEC": PMDEC}
     print("Received:")
-    print(f"RAJ = {timing_solution_dict["RAJ"]}")
-    print(f"DECJ = {timing_solution_dict["DECJ"]}")
-    print(f"PMRA = {timing_solution_dict["PMRA"]}")
-    print(f"PMDEC = {timing_solution_dict["PMDEC"]}")
-    print(f"PX = {timing_solution_dict["PX"]}")
+    print(f"RAJ = {timing_solution_dict['RAJ']}")
+    print(f"DECJ = {timing_solution_dict['DECJ']}")
+    print(f"PMRA = {timing_solution_dict['PMRA']}")
+    print(f"PMDEC = {timing_solution_dict['PMDEC']}")
+    print(f"PX = {timing_solution_dict['PX']}")
     # Convert dictionary to DataFrame
     for t in pd.DataFrame(timing_solution_dict, columns=list(timing_solution_dict.keys())[1:], index=[timing_solution_dict['Index']]).itertuples(index=True):
         timing_solution = t
