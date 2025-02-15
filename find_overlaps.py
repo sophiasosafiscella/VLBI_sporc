@@ -254,7 +254,7 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
 
     if RAJ_overlap and DECJ_overlap and PM_overlap and PX_overlap:
 
-        return product(RAJ_values_hms, DECJ_values_dms, PM_values, PX_values)
+        return product(RAJ_values_hms, DECJ_values_dms, PX_values, PM_values)
 
     else:
         return None
@@ -275,7 +275,7 @@ if __name__ == "__main__":
         solutions = find_solutions(PSR_name, VLBI_astrometric_data, timing_astrometric_data, grid_num=5, plot=False)
 
         if solutions:
-            overlap_df = pd.DataFrame(data=solutions, columns=["RA", "DEC", "PM", "PX"])
+            overlap_df = pd.DataFrame(data=solutions, columns=["RA", "DEC", "PX", "PM"])
             overlap_df[['PMRA', 'PMDEC']] = pd.DataFrame(overlap_df['PM'].tolist(), index=overlap_df.index)
             overlap_df = overlap_df.drop(columns=['PM'])
 #            overlap_df.to_pickle(f"./results/frame_tie/{PSR_name}_overlap_frame_tie.pkl")
