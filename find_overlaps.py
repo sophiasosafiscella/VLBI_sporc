@@ -1,5 +1,3 @@
-import sys
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -17,6 +15,7 @@ from uncertainties import ufloat, umath, unumpy
 from itertools import product
 from math import sqrt
 
+import sys
 import glob
 
 
@@ -85,12 +84,14 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
     VLBI_RAJ = ufloat(Angle(VLBI_data.loc[PSR_name, "ra_v"]).rad, Angle(VLBI_data.loc[PSR_name, "ra_ve"]).rad)
 
     RAJ_overlap, RAJ_values = overlap_range(timing_RAJ, VLBI_RAJ, factor, grid_num)
+    RAJ_values_hms = Angle(RAJ_values, unit=u.rad).to_string(unit=u.hourangle)
 
     # ------------------------------DECJ------------------------------
     timing_DECJ = ufloat(Angle(timing_data.loc[PSR_name, 'dec_t']).rad, Angle(timing_data.loc[PSR_name, "dec_te"]).rad)
     VLBI_DECJ = ufloat(Angle(VLBI_data.loc[PSR_name, "dec_v"]).rad, Angle(VLBI_data.loc[PSR_name, "dec_ve"]).rad)
 
     DECJ_overlap, DECJ_values = overlap_range(timing_DECJ, VLBI_DECJ, factor, grid_num)
+    DECJ_values_dms = Angle(DECJ_values, unit=u.rad).to_string(unit=u.degree)
 
     '''
     # ------------------------------PMRA------------------------------
@@ -253,7 +254,7 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
 
     if RAJ_overlap and DECJ_overlap and PM_overlap and PX_overlap:
 
-        return product(RAJ_values, DECJ_values, PM_values, PX_values)
+        return product(RAJ_values_hms, DECJ_values_dms, PM_values, PX_values)
 
     else:
         return None

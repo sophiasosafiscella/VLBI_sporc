@@ -120,13 +120,13 @@ def calculate_prior(timing_model, VLBI_data_file, PSR_name: str) -> float:
     VLBI_data = pd.read_csv(VLBI_data_file, index_col=0)
 
     # ------------------------------RAJ------------------------------
-    timing_RAJ = ufloat(Angle(timing_data.loc[PSR_name, "ra_t"]).rad, Angle(timing_data.loc[PSR_name, "ra_te"]).rad)
+    timing_RAJ = Angle(timing_model.RAJ.quantity.value).rad
     VLBI_RAJ = ufloat(Angle(VLBI_data.loc[PSR_name, "ra_v"]).rad, Angle(VLBI_data.loc[PSR_name, "ra_ve"]).rad)
 
-    RAJ_prior = pdf_values(x=timing_RAJ.nominal_value, x0=VLBI_RAJ.nominal_value, uL=VLBI_RAJ.std_dev, uR=VLBI_RAJ.std_dev)
+    RAJ_prior = pdf_values(x=timing_RAJ, x0=VLBI_RAJ.nominal_value, uL=VLBI_RAJ.std_dev, uR=VLBI_RAJ.std_dev)
 
     # ------------------------------DECJ-----------------------------
-    timing_DECJ = ufloat(Angle(timing_data.loc[PSR_name, 'dec_t']).rad, Angle(timing_data.loc[PSR_name, "dec_te"]).rad)
+    timing_DECJ = Angle(timing_model.DECJ.quantity.value).rad
     VLBI_DECJ = ufloat(Angle(VLBI_data.loc[PSR_name, "dec_v"]).rad, Angle(VLBI_data.loc[PSR_name, "dec_ve"]).rad)
 
     DECJ_prior = pdf_value(x=timing_DECJ.nominal_value, x0=VLBI_DECJ.nominal_value, uL=VLBI_DECJ.std_dev, uR=VLBI_DECJ.std_dev)
@@ -173,12 +173,14 @@ def replace_params(timing_model: TimingModel, timing_solution: pandas) -> Timing
     # or
     # {'pulsar name': (parameter value, )} for parameters that can't be fit
     params = {
-#        "RAJ": (timing_solution.RAJ, 1, 0 * pint.hourangle_second),
-#        "DECJ": (timing_solution.DECJ, 1, 0 * u.arcsec),
+        "RAJ": (timing_solution.RAJ, 1, 0 * pint.hourangle_second),
+        "DECJ": (timing_solution.DECJ, 1, 0 * u.arcsec),
         "PMRA": (timing_solution.PMRA * timing_model.PMRA.units, 1, 0  * timing_model.PMRA.units),
         "PMDEC": (timing_solution.PMDEC * timing_model.PMDEC.units, 1, 0 * timing_model.PMDEC.units),
         "PX": (timing_solution.PX * timing_model.PX.units, 1, 0 * timing_model.PX.units)
     }
+
+    print("New solution parameters:" + str(params))
 
     # Assign the new parameters
     for name, info in params.items():
