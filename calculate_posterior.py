@@ -86,13 +86,13 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
         # Calculate the posterior for this model and TOAs
         posterior = calculate_prior(eq_timing_model, VLBI_astrometric_data_file, PSR_name) * final_fit_resids.lnlikelihood()
 
-    except:
-        print("Timing solution failed")
-        return [[0.0]]
+#    except:
+#        print("Timing solution failed")
+#        return [[0.0]]
 
-#    except LinAlgError:
-#        print(f"LinAlgError at iteration {timing_solution.Index}")
-#        posterior = [[0.0]]
+    except LinAlgError:
+        print(f"LinAlgError at iteration {timing_solution.Index}")
+        posterior = [[0.0]]
 
     # Output the results
 #    res_df = pd.DataFrame({'PMRA': [timing_solution.PMRA], 'PMDEC': [timing_solution.PMDEC],
