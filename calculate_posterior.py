@@ -128,6 +128,12 @@ if __name__ == "__main__":
     #PSR_name, idx, RAJ, DECJ, PMRA, PMDEC, PX = "J0030+0451", 1400, "0:30:27.42512704", "4:51:39.7153", 2.8773835086748143, -6.2578345561116056, 0.06706353456507053
 
     timing_solution_dict = {"Index": idx, "RAJ": RAJ, "DECJ": DECJ, "PX": PX, "PMRA": PMRA, "PMDEC": PMDEC}
+    print("Received:")
+    print(f"RAJ = {timing_solution_dict.RAJ}")
+    print(f"DECJ = {timing_solution_dict.DECJ}")
+    print(f"PMRA = {timing_solution_dict.PMRA}")
+    print(f"PMDEC = {timing_solution_dict.PMDEC}")
+    print(f"PX = {timing_solution_dict.PX}")
     # Convert dictionary to DataFrame
     for t in pd.DataFrame(timing_solution_dict, columns=list(timing_solution_dict.keys())[1:], index=[timing_solution_dict['Index']]).itertuples(index=True):
         timing_solution = t

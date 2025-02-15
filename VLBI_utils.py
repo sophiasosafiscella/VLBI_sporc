@@ -194,10 +194,6 @@ def replace_params(timing_model: TimingModel, timing_solution: pandas) -> Timing
     timing_model.setup()
     timing_model.validate()
 
-    print("New timing model")
-    print(timing_model.RAJ.quantity)
-    print(timing_model.DECJ.quantity)
-
     return timing_model
 
 def add_noise_params(tm: TimingModel, EFAC, EQUAD) -> TimingModel:
