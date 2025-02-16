@@ -22,7 +22,7 @@ import glob
 import sys
 
 
-def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, VLBI_astrometric_data_file, resume=False, plot=False):
+def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, VLBI_astrometric_data_file, resume=True, plot=False):
     sns.set_theme(context="paper", style="darkgrid", font_scale=1.5)
 
     print(f"Processing iteration {timing_solution.Index} of {PSR_name}")
@@ -144,7 +144,7 @@ if __name__ == "__main__":
     parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}_PINT*par")[0]
 
     # Calculate the posterior
-    posterior = calculate_post(PSR_name, timing_solution, timfile, parfile, VLBI_astrometric_data_file, resume=False, plot=False)[0][0]
+    posterior = calculate_post(PSR_name, timing_solution, timfile, parfile, VLBI_astrometric_data_file, resume=True, plot=False)[0][0]
 
     # Save the timing solution with its posterior
     res_np = np.asarray([idx, RAJ, DECJ, PX, PMRA, PMDEC, posterior])
