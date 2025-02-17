@@ -187,23 +187,12 @@ def replace_params(timing_model: TimingModel, new_timing_solution: pandas) -> Ti
         "PX": (new_timing_solution.PX, 1, 0 * timing_model.PX.units)
     }
 
-    print(f"POSPEOCH before = {Time(timing_model.POSEPOCH.value, format='mjd', scale='tdb')}")
-    print(f"POSPEOCH after  = {Time(new_timing_solution.POSEPOCH, format='mjd', scale='tdb')}")
-    print(" ")
-    print(f"RAJ before = {Angle(timing_model.RAJ.quantity, unit=u.hourangle).to_string(unit=u.hourangle, sep=':')}")
-    print(f"RAJ after  = {new_timing_solution.RAJ}")
-    print(" ")
-    print(f"DECJ before = {Angle(timing_model.DECJ.quantity, unit=u.degree).to_string(unit=u.degree, sep=':')}")
-    print(f"DECJ after  = {new_timing_solution.DECJ}")
-    print(" ")
-    print(f"PMRA before = {timing_model.PMRA.quantity}")
-    print(f"PMRA after  = {new_timing_solution.PMRA}")
-    print(" ")
-    print(f"PMDEC before = {timing_model.PMDEC.quantity}")
-    print(f"PMDEC after  = {new_timing_solution.PMDEC}")
-    print(" ")
-    print(f"PX before = {timing_model.PX.quantity}")
-    print(f"PX after  = {new_timing_solution.PX}")
+    og_POSEPOCH = Time(timing_model.POSEPOCH.value, format='mjd', scale='tdb')
+    og_RAJ = Angle(timing_model.RAJ.quantity, unit=u.hourangle).to_string(unit=u.hourangle, sep=':')
+    og_DECJ = Angle(timing_model.DECJ.quantity, unit=u.degree).to_string(unit=u.degree, sep=':')
+    og_PMRAJ = timing_model.PMRA.quantity
+    og_PMDEC = timing_model.PMDEC.quantity
+    og_PX = timing_model.PX.quantity
 
     # Assign the new parameters
     for name, info in params.items():
@@ -217,6 +206,24 @@ def replace_params(timing_model: TimingModel, new_timing_solution: pandas) -> Ti
     # Set up and validate the new model
     timing_model.setup()
     timing_model.validate()
+
+    print(f"POSPEOCH before = {og_POSEPOCH}")
+    print(f"POSPEOCH after  = {Time(timing_model.POSEPOCH.value, format='mjd', scale='tdb')}")
+    print(" ")
+    print(f"RAJ before = {og_RAJ}")
+    print(f"RAJ after  = {Angle(timing_model.RAJ.quantity, unit=u.hourangle).to_string(unit=u.hourangle, sep=':')}")
+    print(" ")
+    print(f"DECJ before = {og_DECJ}")
+    print(f"DECJ after  = {Angle(timing_model.DECJ.quantity, unit=u.degree).to_string(unit=u.degree, sep=':')}")
+    print(" ")
+    print(f"PMRA before = {og_PMRAJ}")
+    print(f"PMRA after  = {timing_model.PMRA.quantity}")
+    print(" ")
+    print(f"PMDEC before = {og_PMDEC}")
+    print(f"PMDEC after  = {timing_model.PMDEC.quantity}")
+    print(" ")
+    print(f"PX before = {og_PX}")
+    print(f"PX after  = {timing_model.PX.quantity}")
 
     return timing_model
 
