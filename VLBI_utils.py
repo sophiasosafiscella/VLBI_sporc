@@ -130,7 +130,7 @@ def calculate_prior(timing_model, VLBI_data_file, PSR_name: str) -> float:
     timing_DECJ = Angle(timing_model.DECJ.quantity).rad
     VLBI_DECJ = ufloat(Angle(VLBI_data.loc[PSR_name, "dec_v"]).rad, Angle(VLBI_data.loc[PSR_name, "dec_ve"]).rad)
 
-    DECJ_prior = pdf_value(x=timing_DECJ.nominal_value, x0=VLBI_DECJ.nominal_value, uL=VLBI_DECJ.std_dev, uR=VLBI_DECJ.std_dev)
+    DECJ_prior = pdf_value(x=timing_DECJ, x0=VLBI_DECJ.nominal_value, uL=VLBI_DECJ.std_dev, uR=VLBI_DECJ.std_dev)
 
     # ------------------------------Proper Motion------------------------------
 #    VLBI_DECJ = ufloat(Angle(VLBI_data.loc[PSR_name, "VLBI_DECJ"]).rad, Angle(VLBI_data.loc[PSR_name, "VLBI_DECJ_err"]).rad)
