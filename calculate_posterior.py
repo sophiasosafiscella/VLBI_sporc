@@ -16,6 +16,7 @@ from pint_pal import noise_utils
 
 import astropy
 import astropy.units as u
+from astropy.time import Time
 
 from VLBI_utils import calculate_prior, replace_params
 import glob
@@ -31,7 +32,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 
     # Load the timing model and convert to equatorial coordinates
     ec_timing_model = get_model(parfile)  # Ecliptical coordiantes
-    original_epoch = ec_timing_model.POSEPOCH.value
+    original_epoch = Time(ec_timing_model.POSEPOCH.value, format='mjd', scale='tdb')
     eq_timing_model = ec_timing_model.as_ICRS(epoch=original_epoch)
 
     # Load the TOAs

@@ -187,6 +187,9 @@ def replace_params(timing_model: TimingModel, new_timing_solution: pandas) -> Ti
         "PX": (new_timing_solution.PX, 1, 0 * timing_model.PX.units)
     }
 
+    print(f"POSPEOCH before = {Time(timing_model.POSEPOCH.value, format='mjd', scale='tdb')}")
+    print(f"POSPEOCH after  = {Time(new_timing_solution.POSEPOCH, format='mjd', scale='tdb')}")
+    print(" ")
     print(f"RAJ before = {Angle(timing_model.RAJ.quantity, unit=u.hourangle).to_string(unit=u.hourangle, sep=':')}")
     print(f"RAJ after  = {new_timing_solution.RAJ}")
     print(" ")
