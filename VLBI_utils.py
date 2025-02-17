@@ -121,15 +121,13 @@ def calculate_prior(timing_model, VLBI_data_file, PSR_name: str) -> float:
     VLBI_data = pd.read_csv(VLBI_data_file, index_col=0)
 
     # ------------------------------RAJ------------------------------
-    print(timing_model.RAJ.quantity)
-    sys.exit()
     timing_RAJ = Angle(timing_model.RAJ.quantity).rad
     VLBI_RAJ = ufloat(Angle(VLBI_data.loc[PSR_name, "ra_v"]).rad, Angle(VLBI_data.loc[PSR_name, "ra_ve"]).rad)
 
     RAJ_prior = pdf_values(x=timing_RAJ, x0=VLBI_RAJ.nominal_value, uL=VLBI_RAJ.std_dev, uR=VLBI_RAJ.std_dev)
 
     # ------------------------------DECJ-----------------------------
-    timing_DECJ = Angle(timing_model.DECJ.quantity.value).rad
+    timing_DECJ = Angle(timing_model.DECJ.quantity).rad
     VLBI_DECJ = ufloat(Angle(VLBI_data.loc[PSR_name, "dec_v"]).rad, Angle(VLBI_data.loc[PSR_name, "dec_ve"]).rad)
 
     DECJ_prior = pdf_value(x=timing_DECJ.nominal_value, x0=VLBI_DECJ.nominal_value, uL=VLBI_DECJ.std_dev, uR=VLBI_DECJ.std_dev)

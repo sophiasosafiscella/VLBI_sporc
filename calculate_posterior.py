@@ -59,9 +59,9 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 
     # Perform initial fit
     print("Performing the initial fit...")
-    initial_fit = pint.fitter.DownhillGLSFitter(toas, eq_timing_model)
+##    initial_fit = pint.fitter.DownhillGLSFitter(toas, eq_timing_model)
     try:
-#        initial_fit.fit_toas(maxiter=5)
+##        initial_fit.fit_toas(maxiter=5)
         print("Initial fit done.")
     except:
         print("Timing solution failed")
@@ -72,18 +72,22 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 
     # Re-run noise
     print("Re-running noise")
-#    noise_utils.model_noise(eq_timing_model, toas, vary_red_noise=True, n_iter=int(5e4), using_wideband=False,
-#                            resume=resume, run_noise_analysis=True, base_op_dir=f"./noisemodel_linear_sd/timing_solution_{timing_solution.Index}/")
+##    noise_utils.model_noise(eq_timing_model, toas, vary_red_noise=True, n_iter=int(5e4), using_wideband=False,
+##                            resume=resume, run_noise_analysis=True, base_op_dir=f"./noisemodel_linear_sd/timing_solution_{timing_solution.Index}/")
     newmodel = noise_utils.add_noise_to_model(eq_timing_model, save_corner=False, base_dir=f"./noisemodel_linear_sd/timing_solution_{timing_solution.Index}/")
     print("Done!")
 
     # Final fit
-    final_fit = pint.fitter.DownhillGLSFitter(toas, newmodel)
+##    final_fit = pint.fitter.DownhillGLSFitter(toas, newmodel)
     try:
         print("Fitting the new model")
-        final_fit.fit_toas()
-        final_fit_resids = final_fit.resids
+##        final_fit.fit_toas()
+##        final_fit_resids = final_fit.resids
+
 #        final_fit.model.write_parfile("./results/new_fits/" + PSR_name + "/solution_" + str(timing_solution.Index) + "_new.par")  # Save the new .par fil
+        newmodel2_ec = get_model("./results/new_fits/" + PSR_name + "/solution_" + str(timing_solution.Index) + "_new.par")  # Ecliptical coordiantes
+        newmodel2_eq = ec_timing_model.as_ICRS(epoch=newmodel2_ec.POSEPOCH.value)
+        final_fit_resids = Residuals(toas, newmodel2_eq)
         print("New model fitting done.")
 
         # Calculate the posterior for this model and TOAs
