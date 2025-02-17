@@ -27,9 +27,12 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 
     print(f"Processing iteration {timing_solution.Index} of {PSR_name}")
 
+    chains_dir : str = f"./noisemodel_linear_sd/timing_solution_{timing_solution.Index}/"
+
     # Load the timing model and convert to equatorial coordinates
     ec_timing_model = get_model(parfile)  # Ecliptical coordiantes
-    eq_timing_model = ec_timing_model.as_ICRS(epoch=ec_timing_model.POSEPOCH.value)
+    original_epoch = ec_timing_model.POSEPOCH.value
+    eq_timing_model = ec_timing_model.as_ICRS(epoch=original_epoch)
 
     # Load the TOAs
     toas = get_TOAs(timfile, planets=True, ephem=eq_timing_model.EPHEM.value)
@@ -57,11 +60,15 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
     # Replace the timing parameter values in the model with those from the new timing solution
     eq_timing_model = replace_params(eq_timing_model, timing_solution)
 
+#    # Change the reference epoch of the timing model to go back to the original epoch, since the TOAs are reference to
+#    # the original epoch and not to the new epoch that was used to calculate the overlap between VLBI and timing
+#    eq_timing_model.change_posepoch(original_epoch)
+
     # Perform initial fit
     print("Performing the initial fit...")
-##    initial_fit = pint.fitter.DownhillGLSFitter(toas, eq_timing_model)
+    initial_fit = pint.fitter.Fitter.auto(toas, eq_timing_model)
     try:
-##        initial_fit.fit_toas(maxiter=5)
+        initial_fit.fit_toas(maxiter=5)
         print("Initial fit done.")
     except:
         print("Timing solution failed")
@@ -72,23 +79,24 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 
     # Re-run noise
     print("Re-running noise")
-##    noise_utils.model_noise(eq_timing_model, toas, vary_red_noise=True, n_iter=int(5e4), using_wideband=False,
-##                            resume=resume, run_noise_analysis=True, base_op_dir=f"./noisemodel_linear_sd/timing_solution_{timing_solution.Index}/")
-    newmodel = noise_utils.add_noise_to_model(eq_timing_model, save_corner=False, base_dir=f"./noisemodel_linear_sd/timing_solution_{timing_solution.Index}/")
+    noise_utils.model_noise(eq_timing_model, toas, vary_red_noise=True, n_iter=int(5e4), using_wideband=False,
+                            resume=resume, run_noise_analysis=True, base_op_dir=chains_dir)
+    newmodel = noise_utils.add_noise_to_model(eq_timing_model, save_corner=False, base_dir=chains_dir)
     print("Done!")
 
     # Final fit
-##    final_fit = pint.fitter.DownhillGLSFitter(toas, newmodel)
+    final_fit = pint.fitter.DownhillGLSFitter(toas, newmodel)
     try:
         print("Fitting the new model")
-##        final_fit.fit_toas()
-##        final_fit_resids = final_fit.resids
-
-#        final_fit.model.write_parfile("./results/new_fits/" + PSR_name + "/solution_" + str(timing_solution.Index) + "_new.par")  # Save the new .par fil
-        newmodel2_ec = get_model("./results/new_fits/" + PSR_name + "/solution_" + str(timing_solution.Index) + "_new.par")  # Ecliptical coordiantes
-        newmodel2_eq = ec_timing_model.as_ICRS(epoch=newmodel2_ec.POSEPOCH.value)
-        final_fit_resids = Residuals(toas, newmodel2_eq)
+        final_fit.fit_toas()
+        final_fit_resids = final_fit.resids
+        final_fit.model.write_parfile("./results/new_fits/" + PSR_name + "/solution_" + str(timing_solution.Index) + "_new.par")  # Save the new .par fil
         print("New model fitting done.")
+
+#        newmodel2_ec = get_model("./results/new_fits/" + PSR_name + "/solution_" + str(timing_solution.Index) + "_new.par")  # Ecliptical coordiantes
+#        newmodel2_eq = ec_timing_model.as_ICRS(epoch=newmodel2_ec.POSEPOCH.value)
+#        final_fit_resids = Residuals(toas, newmodel2_eq)
+
 
         # Calculate the posterior for this model and TOAs
         prior = calculate_prior(eq_timing_model, VLBI_astrometric_data_file, PSR_name)
@@ -131,11 +139,11 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 
 
 if __name__ == "__main__":
-    PSR_name, idx, RAJ, DECJ, PX, PMRA, PMDEC = sys.argv[1:]  # Timing solution index and parameters
+    PSR_name, idx, RAJ, DECJ, PX, PMRA, PMDEC, POSEPOCH = sys.argv[1:]  # Timing solution index and parameters
     ##PSR_name, idx, RAJ, DECJ, PX, PMRA, PMDEC = "J0030+0451", 0, "0:30:27.4249447", "4:51:39.7153", 2.8773835086748143, -6.2578345561116056, 0.06706353456507053
     #PSR_name, idx, RAJ, DECJ, PX,  PMRA, PMDEC = "J0030+0451", 1400, "0:30:27.42512704", "4:51:39.7153", 2.8773835086748143, -6.2578345561116056, 0.06706353456507053
 
-    timing_solution_dict = {"Index": idx, "RAJ": RAJ, "DECJ": DECJ, "PX": PX, "PMRA": PMRA, "PMDEC": PMDEC}
+    timing_solution_dict = {"Index": idx, "RAJ": RAJ, "DECJ": DECJ, "PX": PX, "PMRA": PMRA, "PMDEC": PMDEC, "POSEPOCH": POSEPOCH}
 
     # Convert dictionary to DataFrame
     for t in pd.DataFrame(timing_solution_dict, columns=list(timing_solution_dict.keys())[1:], index=[timing_solution_dict['Index']]).itertuples(index=True):
@@ -155,6 +163,6 @@ if __name__ == "__main__":
     posterior = calculate_post(PSR_name, timing_solution, timfile, parfile, VLBI_astrometric_data_file, resume=True, plot=False)
 
     # Save the timing solution with its posterior
-    res_np = np.asarray([idx, RAJ, DECJ, PX, PMRA, PMDEC, posterior])
+    res_np = np.asarray([idx, POSEPOCH, RAJ, DECJ, PX, PMRA, PMDEC, posterior])
     print(res_np)
     np.save(posteriors_dir + "/" + str(idx) + "_posterior.npy", res_np)

@@ -278,5 +278,6 @@ if __name__ == "__main__":
             overlap_df = pd.DataFrame(data=solutions, columns=["RA", "DEC", "PX", "PM"])
             overlap_df[['PMRA', 'PMDEC']] = pd.DataFrame(overlap_df['PM'].tolist(), index=overlap_df.index)
             overlap_df = overlap_df.drop(columns=['PM'])
+            overlap_df['POSEPOCH'] = timing_astrometric_data.loc[PSR_name, "epoch_t"]
 #            overlap_df.to_pickle(f"./results/frame_tie/{PSR_name}_overlap_frame_tie.pkl")
             overlap_df.to_csv(f"./results/frame_tie/{PSR_name}_overlap_frame_tie.txt", sep=" ", header=True, index_label="ArrayTaskID")

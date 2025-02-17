@@ -179,6 +179,7 @@ def replace_params(timing_model: TimingModel, new_timing_solution: pandas) -> Ti
     # or
     # {'pulsar name': (parameter value, )} for parameters that can't be fit
     params = {
+        "POSEPOCH": (Time(new_timing_solution.POSEPOCH, format="mjd", scale="tdb"),),
         "RAJ": (new_timing_solution.RAJ, 1, 0 * pint.hourangle_second),
         "DECJ": (new_timing_solution.DECJ, 1, 0 * u.arcsec),
         "PMRA": (new_timing_solution.PMRA, 1, 0 * timing_model.PMRA.units),
