@@ -164,6 +164,11 @@ def calculate_prior(timing_model, VLBI_data_file, PSR_name: str) -> float:
 
     # Calculate the joint probability distribution by multiplying the PDFs
 #    return np.outer(PX_prior, PM_prior)
+    print("RAJ prior = " + str(RAJ_prior))
+    print("DECJ prior = " + str(DECJ_prior))
+    print("PM_prior = " + str(PM_prior))
+    print("PX_prior = " + str(PX_prior))
+
     return RAJ_prior * DECJ_prior * PM_prior * PX_prior
 
 
