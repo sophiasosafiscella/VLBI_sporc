@@ -17,8 +17,9 @@ from pint_pal import noise_utils
 import astropy
 import astropy.units as u
 from astropy.time import Time
+from math import exp
 
-from VLBI_utils import calculate_prior, replace_params
+from VLBI_utils import calculate_lnprior, replace_params
 import glob
 import sys
 
@@ -29,6 +30,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
     print(f"Processing iteration {timing_solution.Index} of {PSR_name}")
 
     chains_dir : str = f"./noisemodel_linear_sd/timing_solution_{timing_solution.Index}/"
+    new_par_file: str = "./results/new_fits/" + PSR_name + "/solution_" + str(timing_solution.Index) + "_new.par"
 
     # Load the timing model and convert to equatorial coordinates
     ec_timing_model = get_model(parfile)  # Ecliptical coordiantes
@@ -91,20 +93,26 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
         print("Fitting the new model")
         final_fit.fit_toas()
         final_fit_resids = final_fit.resids
-        final_fit.model.write_parfile("./results/new_fits/" + PSR_name + "/solution_" + str(timing_solution.Index) + "_new.par")  # Save the new .par fil
+        final_fit.model.write_parfile(new_par_file)  # Save the new .par fil
         print("New model fitting done.")
 
-#        newmodel2_ec = get_model("./results/new_fits/" + PSR_name + "/solution_" + str(timing_solution.Index) + "_new.par")  # Ecliptical coordiantes
+#        newmodel2_ec = get_model(new_par_file)  # Ecliptical coordiantes
 #        newmodel2_eq = ec_timing_model.as_ICRS(epoch=newmodel2_ec.POSEPOCH.value)
-#        final_fit_resids = Residuals(toas, newmodel2_eq)
+#        newmodel_with_noise = noise_utils.add_noise_to_model(newmodel2_eq, save_corner=False, base_dir=chains_dir)
+#        final_fit = pint.fitter.DownhillGLSFitter(toas, newmodel_with_noise)
+#        final_fit.fit_toas()
+#        final_fit_resids = final_fit.resids
 
 
         # Calculate the posterior for this model and TOAs
-        prior = calculate_prior(eq_timing_model, VLBI_astrometric_data_file, PSR_name)
-        likelihood = final_fit_resids.lnlikelihood()
-        posterior = prior * likelihood
-        print("Prior = " + str(prior))
-        print("Likelihood = " + str(likelihood))
+        ln_prior = calculate_lnprior(eq_timing_model, VLBI_astrometric_data_file, PSR_name)
+        ln_likelihood = final_fit_resids.lnlikelihood()
+        ln_posterior = ln_prior + ln_likelihood
+        posterior = exp(ln_posterior)
+        print("Log(Prior) = " + str(ln_prior))
+        print("Log(Likelihood) = " + str(ln_likelihood))
+        print("Log(Posterior) = " + str(ln_posterior))
+        print("Posterior = " + str(posterior))
 
 #    except:
 #        print("Timing solution failed")
@@ -141,7 +149,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 
 if __name__ == "__main__":
     PSR_name, idx, RAJ, DECJ, PX, PMRA, PMDEC, POSEPOCH = sys.argv[1:]  # Timing solution index and parameters
-    ##PSR_name, idx, RAJ, DECJ, PX, PMRA, PMDEC = "J0030+0451", 0, "0:30:27.4249447", "4:51:39.7153", 2.8773835086748143, -6.2578345561116056, 0.06706353456507053
+    #PSR_name, idx, RAJ, DECJ, PX, PMRA, PMDEC, POSEPOCH = "J0030+0451", 0, "0:30:27.4249447", "4:51:39.7153", 2.8773835086748143, -6.2578345561116056, 0.06706353456507053, 57849.0
     #PSR_name, idx, RAJ, DECJ, PX,  PMRA, PMDEC = "J0030+0451", 1400, "0:30:27.42512704", "4:51:39.7153", 2.8773835086748143, -6.2578345561116056, 0.06706353456507053
 
     timing_solution_dict = {"Index": idx, "RAJ": RAJ, "DECJ": DECJ, "PX": PX, "PMRA": PMRA, "PMDEC": PMDEC, "POSEPOCH": POSEPOCH}

@@ -10,6 +10,7 @@ from pandas.core.frame import pandas
 from pint.models.timing_model import TimingModel
 from scipy.stats import norm, skewnorm
 from uncertainties import ufloat, umath
+from math import log as ln
 
 import sys
 
@@ -115,7 +116,7 @@ def draw_samples(x0, uL, uR, size=1000):
     return samples
 
 
-def calculate_prior(timing_model, VLBI_data_file, PSR_name: str) -> float:
+def calculate_lnprior(timing_model, VLBI_data_file, PSR_name: str) -> float:
     # Given the values of RAJ, DECJ, PMRA, PMDEC, PX that we have inserted into the timing model, calculate where they
     # fall in the PDF distributions from the VLBI values
     VLBI_data = pd.read_csv(VLBI_data_file, index_col=0)
@@ -169,7 +170,7 @@ def calculate_prior(timing_model, VLBI_data_file, PSR_name: str) -> float:
     print("PM_prior = " + str(PM_prior))
     print("PX_prior = " + str(PX_prior))
 
-    return RAJ_prior * DECJ_prior * PM_prior * PX_prior
+    return ln(RAJ_prior) + ln(DECJ_prior) + ln(PM_prior) + ln(PX_prior)
 
 
 def replace_params(timing_model: TimingModel, new_timing_solution: pandas) -> TimingModel:
