@@ -68,6 +68,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 #    eq_timing_model.change_posepoch(original_epoch)
 
     # Perform initial fit
+    '''
     print("Performing the initial fit...")
     initial_fit = pint.fitter.Fitter.auto(toas, eq_timing_model)
     try:
@@ -89,19 +90,22 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 
     # Final fit
     final_fit = pint.fitter.DownhillGLSFitter(toas, newmodel)
+    '''
     try:
+        '''
         print("Fitting the new model")
         final_fit.fit_toas()
         final_fit_resids = final_fit.resids
         final_fit.model.write_parfile(new_par_file)  # Save the new .par fil
         print("New model fitting done.")
+        '''
 
-#        newmodel2_ec = get_model(new_par_file)  # Ecliptical coordiantes
-#        newmodel2_eq = ec_timing_model.as_ICRS(epoch=newmodel2_ec.POSEPOCH.value)
-#        newmodel_with_noise = noise_utils.add_noise_to_model(newmodel2_eq, save_corner=False, base_dir=chains_dir)
-#        final_fit = pint.fitter.DownhillGLSFitter(toas, newmodel_with_noise)
-#        final_fit.fit_toas()
-#        final_fit_resids = final_fit.resids
+        newmodel2_ec = get_model(new_par_file)  # Ecliptical coordiantes
+        newmodel2_eq = ec_timing_model.as_ICRS(epoch=newmodel2_ec.POSEPOCH.value)
+        newmodel_with_noise = noise_utils.add_noise_to_model(newmodel2_eq, save_corner=False, base_dir=chains_dir)
+        final_fit = pint.fitter.DownhillGLSFitter(toas, newmodel_with_noise)
+        final_fit.fit_toas()
+        final_fit_resids = final_fit.resids
 
 
         # Calculate the posterior for this model and TOAs
@@ -148,8 +152,8 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 
 
 if __name__ == "__main__":
-    PSR_name, idx, RAJ, DECJ, PX, PMRA, PMDEC, POSEPOCH = sys.argv[1:]  # Timing solution index and parameters
-    #PSR_name, idx, RAJ, DECJ, PX, PMRA, PMDEC, POSEPOCH = "J0030+0451", 0, "0:30:27.4249447", "4:51:39.7153", 2.8773835086748143, -6.2578345561116056, 0.06706353456507053, 57849.0
+    #PSR_name, idx, RAJ, DECJ, PX, PMRA, PMDEC, POSEPOCH = sys.argv[1:]  # Timing solution index and parameters
+    PSR_name, idx, RAJ, DECJ, PX, PMRA, PMDEC, POSEPOCH = "J0030+0451", 0, "0:30:27.4249447", "4:51:39.7153", 2.8773835086748143, -6.2578345561116056, 0.06706353456507053, 57849.0
     #PSR_name, idx, RAJ, DECJ, PX,  PMRA, PMDEC = "J0030+0451", 1400, "0:30:27.42512704", "4:51:39.7153", 2.8773835086748143, -6.2578345561116056, 0.06706353456507053
 
     timing_solution_dict = {"Index": idx, "RAJ": RAJ, "DECJ": DECJ, "PX": PX, "PMRA": PMRA, "PMDEC": PMDEC, "POSEPOCH": POSEPOCH}
