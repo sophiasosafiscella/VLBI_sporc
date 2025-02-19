@@ -89,8 +89,13 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
     # ------------------------------DECJ------------------------------
     timing_DECJ = ufloat(Angle(timing_data.loc[PSR_name, 'dec_t']).rad, Angle(timing_data.loc[PSR_name, "dec_te"]).rad)
     VLBI_DECJ = ufloat(Angle(VLBI_data.loc[PSR_name, "dec_v"]).rad, Angle(VLBI_data.loc[PSR_name, "dec_ve"]).rad)
-
+    print(timing_DECJ.nominal_value)
+    print(timing_DECJ.std_dev)
+    print(VLBI_DECJ.nominal_value)
+    print(VLBI_DECJ.std_dev)
     DECJ_overlap, DECJ_values = overlap_range(timing_DECJ, VLBI_DECJ, factor, grid_num)
+    print(DECJ_values)
+    sys.exit()
     DECJ_values_dms = Angle(DECJ_values, unit=u.rad).to_string(unit=u.degree, sep=':')
 
     '''
@@ -267,7 +272,7 @@ if __name__ == "__main__":
     timing_astrometric_data = pd.read_csv("./data/timing_astrometric_data_updated.csv", index_col=0, header=0)
     PSR_list = VLBI_astrometric_data.index  # List of pulsars
 
-    for PSR_name in ["J0030+0451"]:
+    for PSR_name in ["J1024-0719"]:
 
         print(f"Finding the possible timing solutions for {PSR_name}")
 
