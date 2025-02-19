@@ -67,69 +67,58 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 #    # the original epoch and not to the new epoch that was used to calculate the overlap between VLBI and timing
 #    eq_timing_model.change_posepoch(original_epoch)
 
-    # Perform initial fit
-    '''
-    print("Performing the initial fit...")
-    initial_fit = pint.fitter.Fitter.auto(toas, eq_timing_model)
-    try:
-        initial_fit.fit_toas(maxiter=5)
-        print("Initial fit done.")
-    except:
-        print("Timing solution failed")
-        return [[0.0]]
-
-#    except LinAlgError:
-#        print(f"LinAlgError at iteration {timing_solution.Index}")
-
-    # Re-run noise
-    print("Re-running noise")
-    noise_utils.model_noise(eq_timing_model, toas, vary_red_noise=True, n_iter=int(5e4), using_wideband=False,
-                            resume=resume, run_noise_analysis=True, base_op_dir=chains_dir)
-    newmodel = noise_utils.add_noise_to_model(eq_timing_model, save_corner=False, base_dir=chains_dir)
-    print("Done!")
-
-    # Final fit
-    final_fit = pint.fitter.DownhillGLSFitter(toas, newmodel)
-    '''
-    try:
-        '''
-        print("Fitting the new model")
-        final_fit.fit_toas()
-        final_fit_resids = final_fit.resids
-        final_fit.model.write_parfile(new_par_file)  # Save the new .par fil
-        print("New model fitting done.")
-        '''
-
-        newmodel2_ec = get_model(new_par_file)  # Ecliptical coordiantes
-        newmodel2_eq = ec_timing_model.as_ICRS(epoch=newmodel2_ec.POSEPOCH.value)
-        newmodel_with_noise = noise_utils.add_noise_to_model(newmodel2_eq, save_corner=False, base_dir=chains_dir)
+    if os.path.exists(new_par_file):
+        newmodel_ec = get_model(new_par_file)  # Ecliptical coordiantes
+        newmodel_eq = ec_timing_model.as_ICRS(epoch=newmodel_ec.POSEPOCH.value)
+        newmodel_with_noise = noise_utils.add_noise_to_model(newmodel_eq, save_corner=False, base_dir=chains_dir)
         final_fit = pint.fitter.DownhillGLSFitter(toas, newmodel_with_noise)
         final_fit.fit_toas()
         final_fit_resids = final_fit.resids
 
+    else:
+        # Perform initial fit
+        print("Performing the initial fit...")
+        initial_fit = pint.fitter.Fitter.auto(toas, eq_timing_model)
+        try:
+            initial_fit.fit_toas(maxiter=5)
+            print("Initial fit done.")
+        except:
+            print("Timing solution failed")
+            return [[0.0]]
 
-        # Calculate the posterior for this model and TOAs
-        ln_prior = calculate_lnprior(eq_timing_model, VLBI_astrometric_data_file, PSR_name)
-        ln_likelihood = final_fit_resids.lnlikelihood()
-        ln_posterior = ln_prior + ln_likelihood
-#        posterior = exp(ln_posterior)
-        print("Log(Prior) = " + str(ln_prior))
-        print("Log(Likelihood) = " + str(ln_likelihood))
-        print("Log(Posterior) = " + str(ln_posterior))
-#        print("Posterior = " + str(posterior))
+    #    except LinAlgError:
+    #        print(f"LinAlgError at iteration {timing_solution.Index}")
 
-#    except:
-#        print("Timing solution failed")
-#        return [[0.0]]
+        # Re-run noise
+        print("Re-running noise")
+        noise_utils.model_noise(eq_timing_model, toas, vary_red_noise=True, n_iter=int(5e4), using_wideband=False,
+                                resume=resume, run_noise_analysis=True, base_op_dir=chains_dir)
+        newmodel = noise_utils.add_noise_to_model(eq_timing_model, save_corner=False, base_dir=chains_dir)
+        print("Done!")
 
-    except LinAlgError:
-        print(f"LinAlgError at iteration {timing_solution.Index}")
-        posterior = [[0.0]]
+        # Final fit
+        final_fit = pint.fitter.DownhillGLSFitter(toas, newmodel)
 
-    # Output the results
-#    res_df = pd.DataFrame({'PMRA': [timing_solution.PMRA], 'PMDEC': [timing_solution.PMDEC],
-#                           'PX': [timing_solution.PX], 'posterior': [posterior[0][0]]})
-#    res_df.to_pickle(posteriors_dir + "/" + str(timing_solution.Index) + "_posterior.pkl")
+        try:
+            print("Fitting the new model")
+            final_fit.fit_toas()
+            final_fit_resids = final_fit.resids
+            final_fit.model.write_parfile(new_par_file)  # Save the new .par fil
+            print("New model fitting done.")
+
+            # Calculate the posterior for this model and TOAs
+            ln_prior = calculate_lnprior(eq_timing_model, VLBI_astrometric_data_file, PSR_name)
+            ln_likelihood = final_fit_resids.lnlikelihood()
+            ln_posterior = ln_prior + ln_likelihood
+            posterior = ln_posterior
+            #        posterior = exp(ln_posterior)
+            print("Log(Prior) = " + str(ln_prior))
+            print("Log(Likelihood) = " + str(ln_likelihood))
+            print("Log(Posterior) = " + str(ln_posterior))
+
+        except LinAlgError:
+            print(f"LinAlgError at iteration {timing_solution.Index}")
+            posterior = [[0.0]]
 
     # Let's plot the residuals and compare
     if plot:
@@ -152,8 +141,8 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 
 
 if __name__ == "__main__":
-    #PSR_name, idx, RAJ, DECJ, PX, PMRA, PMDEC, POSEPOCH = sys.argv[1:]  # Timing solution index and parameters
-    PSR_name, idx, RAJ, DECJ, PX, PMRA, PMDEC, POSEPOCH = "J0030+0451", 0, "0:30:27.4249447", "4:51:39.7153", 2.8773835086748143, -6.2578345561116056, 0.06706353456507053, 57849.0
+    PSR_name, idx, RAJ, DECJ, PX, PMRA, PMDEC, POSEPOCH = sys.argv[1:]  # Timing solution index and parameters
+    #PSR_name, idx, RAJ, DECJ, PX, PMRA, PMDEC, POSEPOCH = "J0030+0451", 0, "0:30:27.4249447", "4:51:39.7153", 2.8773835086748143, -6.2578345561116056, 0.06706353456507053, 57849.0
     #PSR_name, idx, RAJ, DECJ, PX,  PMRA, PMDEC = "J0030+0451", 1400, "0:30:27.42512704", "4:51:39.7153", 2.8773835086748143, -6.2578345561116056, 0.06706353456507053
 
     timing_solution_dict = {"Index": idx, "RAJ": RAJ, "DECJ": DECJ, "PX": PX, "PMRA": PMRA, "PMDEC": PMDEC, "POSEPOCH": POSEPOCH}
