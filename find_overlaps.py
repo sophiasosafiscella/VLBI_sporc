@@ -84,19 +84,12 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
     VLBI_RAJ = ufloat(Angle(VLBI_data.loc[PSR_name, "ra_v"]).rad, Angle(VLBI_data.loc[PSR_name, "ra_ve"]).rad)
 
     RAJ_overlap, RAJ_values = overlap_range(timing_RAJ, VLBI_RAJ, factor, grid_num)
-    RAJ_values_hms = Angle(RAJ_values, unit=u.rad).to_string(unit=u.hourangle, sep=':')
 
     # ------------------------------DECJ------------------------------
     timing_DECJ = ufloat(Angle(timing_data.loc[PSR_name, 'dec_t']).rad, Angle(timing_data.loc[PSR_name, "dec_te"]).rad)
     VLBI_DECJ = ufloat(Angle(VLBI_data.loc[PSR_name, "dec_v"]).rad, Angle(VLBI_data.loc[PSR_name, "dec_ve"]).rad)
-    print(timing_DECJ.nominal_value)
-    print(timing_DECJ.std_dev)
-    print(VLBI_DECJ.nominal_value)
-    print(VLBI_DECJ.std_dev)
+
     DECJ_overlap, DECJ_values = overlap_range(timing_DECJ, VLBI_DECJ, factor, grid_num)
-    print(DECJ_values)
-    sys.exit()
-    DECJ_values_dms = Angle(DECJ_values, unit=u.rad).to_string(unit=u.degree, sep=':')
 
     '''
     # ------------------------------PMRA------------------------------
@@ -258,10 +251,12 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
     # ------------------------------Find the overlap------------------------------
 
     if RAJ_overlap and DECJ_overlap and PM_overlap and PX_overlap:
-
+        RAJ_values_hms = Angle(RAJ_values, unit=u.rad).to_string(unit=u.hourangle, sep=':')
+        DECJ_values_dms = Angle(DECJ_values, unit=u.rad).to_string(unit=u.degree, sep=':')
         return product(RAJ_values_hms, DECJ_values_dms, PX_values, PM_values)
 
     else:
+        print("There is no overlap in one of the parameters")
         return None
 
 

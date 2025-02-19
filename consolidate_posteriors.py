@@ -20,7 +20,7 @@ for i, file in tqdm(enumerate(posterior_files)):
 
 # Save the results to a DataFrame
 result_df = pd.DataFrame(data=res_np, index=idx_np, columns=["POSEPOCH", "RAJ", "DECJ", "PMRA", "PMDEC", "PX", "posterior"]).sort_index()
-result_df.to_pickle(f"./results/timing_posteriors/{PSR_name}_consolidated_timing_posteriors.pkl")
+result_df.to_pickle(f"./results/timing_posteriors_frame_tie/{PSR_name}_consolidated_timing_posteriors.pkl")
 
 # Find the solution with the highest posterior
 best_sol = result_df['posterior'].idxmax()
