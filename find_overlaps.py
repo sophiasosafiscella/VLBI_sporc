@@ -251,6 +251,7 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
     # ------------------------------Find the overlap------------------------------
 
     if RAJ_overlap and DECJ_overlap and PM_overlap and PX_overlap:
+        print("Overlaps found!")
         RAJ_values_hms = Angle(RAJ_values, unit=u.rad).to_string(unit=u.hourangle, sep=':')
         DECJ_values_dms = Angle(DECJ_values, unit=u.rad).to_string(unit=u.degree, sep=':')
         return product(RAJ_values_hms, DECJ_values_dms, PX_values, PM_values)
@@ -274,7 +275,7 @@ if __name__ == "__main__":
     timing_astrometric_data = pd.read_csv("./data/timing_astrometric_data_updated.csv", index_col=0, header=0)
     PSR_list = VLBI_astrometric_data.index  # List of pulsars
 
-    for PSR_name in ["J1024-0719"]:
+    for PSR_name in ["J2145-0750"]:
 
         print(f"Finding the possible timing solutions for {PSR_name}")
 
