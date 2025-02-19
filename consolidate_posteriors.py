@@ -9,7 +9,7 @@ posteriors_dir: str = f"./results/timing_posteriors_frame_tie/{PSR_name}"
 posterior_files = glob(f"{posteriors_dir}/*posterior.npy")
 
 # Array set to zero but to be replaced with the posteriors
-res_np = np.zeros((len(posterior_files), 7), dtype=float)
+res_np = np.zeros((len(posterior_files), 7), dtype=object)
 idx_np = np.zeros(len(posterior_files), dtype=int)
 
 for i, file in tqdm(enumerate(posterior_files)):
