@@ -258,11 +258,11 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
     else:
         if not RAJ_overlap:
             print("There is no overlap in RAJ")
-        elif not DECJ_overlap:
+        if not DECJ_overlap:
             print("There is no overlap in DECJ")
-        elif not PM_overlap:
+        if not PM_overlap:
             print("There is no overlap in PM")
-        elif not PX_overlap:
+        if not PX_overlap:
             print("There is no overlap in PX")
         return None
 
