@@ -112,11 +112,11 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
         ln_prior = calculate_lnprior(eq_timing_model, VLBI_astrometric_data_file, PSR_name)
         ln_likelihood = final_fit_resids.lnlikelihood()
         ln_posterior = ln_prior + ln_likelihood
-        posterior = exp(ln_posterior)
+#        posterior = exp(ln_posterior)
         print("Log(Prior) = " + str(ln_prior))
         print("Log(Likelihood) = " + str(ln_likelihood))
         print("Log(Posterior) = " + str(ln_posterior))
-        print("Posterior = " + str(posterior))
+#        print("Posterior = " + str(posterior))
 
 #    except:
 #        print("Timing solution failed")
@@ -178,4 +178,4 @@ if __name__ == "__main__":
     # Save the timing solution with its posterior
     res_np = np.asarray([idx, POSEPOCH, RAJ, DECJ, PX, PMRA, PMDEC, posterior])
     print(res_np)
-    np.save(posteriors_dir + "/" + str(idx) + "_posterior.npy", res_np)
+#    np.save(posteriors_dir + "/" + str(idx) + "_posterior.npy", res_np)
