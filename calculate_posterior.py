@@ -105,20 +105,19 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
             final_fit_resids = final_fit.resids
             final_fit.model.write_parfile(new_par_file)  # Save the new .par fil
             print("New model fitting done.")
-
-            # Calculate the posterior for this model and TOAs
-            ln_prior = calculate_lnprior(eq_timing_model, VLBI_astrometric_data_file, PSR_name)
-            ln_likelihood = final_fit_resids.lnlikelihood()
-            ln_posterior = ln_prior + ln_likelihood
-            posterior = ln_posterior
-            #        posterior = exp(ln_posterior)
-            print("Log(Prior) = " + str(ln_prior))
-            print("Log(Likelihood) = " + str(ln_likelihood))
-            print("Log(Posterior) = " + str(ln_posterior))
-
         except LinAlgError:
             print(f"LinAlgError at iteration {timing_solution.Index}")
-            posterior = [[0.0]]
+            return [[0.0]]
+
+    # Calculate the posterior for this model and TOAs
+    ln_prior = calculate_lnprior(eq_timing_model, VLBI_astrometric_data_file, PSR_name)
+    ln_likelihood = final_fit_resids.lnlikelihood()
+    ln_posterior = ln_prior + ln_likelihood
+    posterior = ln_posterior
+    #        posterior = exp(ln_posterior)
+    print("Log(Prior) = " + str(ln_prior))
+    print("Log(Likelihood) = " + str(ln_likelihood))
+    print("Log(Posterior) = " + str(ln_posterior))
 
     # Let's plot the residuals and compare
     if plot:
