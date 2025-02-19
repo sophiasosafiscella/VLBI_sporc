@@ -256,7 +256,14 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
         return product(RAJ_values_hms, DECJ_values_dms, PX_values, PM_values)
 
     else:
-        print("There is no overlap in one of the parameters")
+        if not RAJ_overlap:
+            print("There is no overlap in RAJ")
+        elif not DECJ_overlap:
+            print("There is no overlap in DECJ")
+        elif not PM_overlap:
+            print("There is no overlap in PM")
+        elif not PX_overlap:
+            print("There is no overlap in PX")
         return None
 
 
