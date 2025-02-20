@@ -30,7 +30,10 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
     print(f"Processing iteration {timing_solution.Index} of {PSR_name}")
 
     chains_dir : str = f"./noisemodel_linear_sd/timing_solution_{timing_solution.Index}/"
-    new_par_file: str = "./results/new_fits/" + PSR_name + "/solution_" + str(timing_solution.Index) + "_new.par"
+    new_par_dir: str = "./results/new_fits/" + PSR_name
+    if not os.path.exists(new_par_dir):
+        os.makedirs(new_par_dir)
+    new_par_file: str = new_par_dir + "/solution_" + str(timing_solution.Index) + "_new.par"
 
     # Load the timing model and convert to equatorial coordinates
     ec_timing_model = get_model(parfile)  # Ecliptical coordiantes
