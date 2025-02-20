@@ -169,4 +169,4 @@ if __name__ == "__main__":
     # Save the timing solution with its posterior
     res_np = np.asarray([idx, POSEPOCH, RAJ, DECJ, PX, PMRA, PMDEC, posterior])
     print(res_np)
-#    np.save(posteriors_dir + "/" + str(idx) + "_posterior.npy", res_np)
+    np.save(posteriors_dir + "/" + str(idx) + "_posterior.npy", res_np)
