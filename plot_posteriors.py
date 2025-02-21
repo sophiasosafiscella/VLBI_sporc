@@ -6,7 +6,7 @@ from pint.models import get_model
 from scipy.interpolate import griddata
 import glob
 
-def plot_contour(df, tm, x_col, y_col, w_col, ax):
+def plot_contour(df, tm, timing_data, x_col, y_col, w_col, ax):
     # Extract columns
     x = df[x_col]
     y = df[y_col]
@@ -25,7 +25,7 @@ def plot_contour(df, tm, x_col, y_col, w_col, ax):
     plt.colorbar(contour, ax=ax, label=w_col)
 
     # Extract the reference timing values
-    ax.scatter(getattr(tm, x_col).value, getattr(tm, y_col).value, marker='x', c='red', s=400)
+    ax.scatter(timing_data[x_col], timing_data[y_col], marker='x', c='red', s=400)
 
     ax.set_xlabel(f"{x_col} [{getattr(tm, x_col).units}]")
     ax.set_ylabel(f"{y_col} [{getattr(tm, y_col).units}]")
@@ -41,20 +41,28 @@ if __name__ == "__main__":
     ec_timing_model = get_model(parfile)  # Ecliptical coordiantes
     eq_timing_model = ec_timing_model.as_ICRS(epoch=ec_timing_model.POSEPOCH.value)
 
+    timing_data = pd.read_pickle(f"./results/timing_posteriors/{PSR_name}_timing_posteriors.pkl").dropna(how='any').loc[PSR_name]
+
     # Get the timing posteriors
     df = pd.read_pickle(f"./results/timing_posteriors/{PSR_name}_timing_posteriors.pkl").dropna(how='any')
 
     # Create subplots
     sns.set_context('poster')
     sns.set_style('ticks')
-    fig, axs = plt.subplots(2, 2, figsize=(18, 12))
+    fig, axs = plt.subplots(5, 5, figsize=(18, 12))
     fig.suptitle(PSR_name)
-    axs[0, 1].axis('off')
+
+    for row in range(5):
+        for col in range(row+1, 5):
+            axs[row, col].axis('off')
 
     # Plot each pair
-    plot_contour(df, eq_timing_model, 'PMRA', 'PMDEC', 'posterior', axs[0, 0])
-    plot_contour(df, eq_timing_model, 'PMRA', 'PX', 'posterior', axs[1, 0])
-    plot_contour(df, eq_timing_model, 'PMDEC', 'PX', 'posterior', axs[1, 1])
+    plot_contour(df, eq_timing_model, timing_data, 'RAJ', 'DECJ', 'posterior', axs[0, 0])
+    plot_contour(df, eq_timing_model, timing_data, 'RAJ', 'PMRA', 'posterior', axs[1, 0])
+    plot_contour(df, eq_timing_model, timing_data, 'RAJ', 'PMDEC', 'posterior', axs[2, 0])
+    plot_contour(df, eq_timing_model, timing_data, 'RAJ', 'PX', 'posterior', axs[3, 0])
+    plot_contour(df, eq_timing_model, timing_data, 'RAJ', 'PX', 'posterior', axs[4, 0])
+    plot_contour(df, eq_timing_model, timing_data,'PMDEC', 'PX', 'posterior', axs[1, 1])
 
     plt.tight_layout()
     plt.show()
