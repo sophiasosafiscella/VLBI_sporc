@@ -9,6 +9,7 @@ PSR_names = ["J0030+0451", "J2145-0750"]
 VLBI_color = "rgba(0, 204, 150, 0.5)"  # px.colors.qualitative.Pastel1[2]
 timing_color = "rgba(99, 110, 250, 0.5)"  # px.colors.qualitative.Pastel1[1]
 
+# Load the timing solution
 timing_astrometric_data = pd.read_csv("./data/timing_astrometric_data_updated.csv", index_col=0, header=0)
 
 fig = make_subplots(rows=2, cols=5)
