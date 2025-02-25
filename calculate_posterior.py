@@ -164,7 +164,7 @@ if __name__ == "__main__":
     parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}_PINT*par")[0]
 
     # Calculate the posterior
-    posterior = calculate_post(PSR_name, timing_solution, timfile, parfile, VLBI_astrometric_data_file, resume=True, plot=False)
+    posterior = calculate_post(PSR_name, timing_solution, timfile, parfile, VLBI_astrometric_data_file, resume=False, plot=False)
 
     # Save the timing solution with its posterior
     res_np = np.asarray([idx, POSEPOCH, RAJ, DECJ, PX, PMRA, PMDEC, posterior])
