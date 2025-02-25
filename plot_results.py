@@ -5,16 +5,19 @@ from astropy.coordinates import Angle
 import astropy.units as u
 import sys
 
-PSR_names = ["J0030+0451", "J2145-0750"]
+PSR_names = ["J0030+0451", "J2145-0750", "J2010-1323"]
 VLBI_color = "rgba(0, 204, 150, 0.5)"  # px.colors.qualitative.Pastel1[2]
 timing_color = "rgba(99, 110, 250, 0.5)"  # px.colors.qualitative.Pastel1[1]
 
 # Load the timing solution
 timing_astrometric_data = pd.read_csv("./data/timing_astrometric_data_updated.csv", index_col=0, header=0)
 
-fig = make_subplots(rows=2, cols=5)
+fig = make_subplots(rows=3, cols=5)
 
 for row, PSR_name in enumerate(PSR_names):
+
+    print(PSR_name)
+
     posteriors_file: str = f"./results/timing_posteriors_frame_tie/{PSR_name}_consolidated_timing_posteriors.pkl"
 
     # Load the posteriors
@@ -25,7 +28,7 @@ for row, PSR_name in enumerate(PSR_names):
 
     # Find the solution with the highest posterior
     best_sol_idx = df['posterior'].idxmax()
-    best_sol = df.iloc[best_sol_idx].to_dict()
+    best_sol = df.loc[best_sol_idx].to_dict()
 
     # RAJ
     sols = df[(df['PX'] == best_sol['PX']) & (df['DECJ'] == best_sol['DECJ']) &

@@ -45,7 +45,8 @@ def plot_contour(df, best_sol, timing_astrometric_data, tm, x_label, y_label, ax
 
 if __name__ == "__main__":
 
-    PSR_name: str = "J0030+0451"
+#    PSR_name: str = "J0030+0451"
+    PSR_name: str = "J2145-0750"
     posteriors_file: str = f"./results/timing_posteriors_frame_tie/{PSR_name}_consolidated_timing_posteriors.pkl"
 
     # Get the nominal timing values
@@ -64,7 +65,7 @@ if __name__ == "__main__":
 
     # Find the solution with the highest posterior
     best_sol_idx = result_df['posterior'].idxmax()
-    best_sol = result_df.iloc[best_sol_idx].to_dict()
+    best_sol = result_df.loc[best_sol_idx].to_dict()
 
     # Create subplots
     sns.set_context('poster')

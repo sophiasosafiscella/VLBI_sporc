@@ -94,6 +94,9 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 
         # Re-run noise
         print("Re-running noise")
+        if not os.path.exists(chains_dir):
+            os.mkdir(chains_dir)
+
         noise_utils.model_noise(eq_timing_model, toas, vary_red_noise=True, n_iter=int(5e4), using_wideband=False,
                                 resume=resume, run_noise_analysis=True, base_op_dir=chains_dir)
         newmodel = noise_utils.add_noise_to_model(eq_timing_model, save_corner=False, base_dir=chains_dir)
