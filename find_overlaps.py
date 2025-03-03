@@ -89,6 +89,8 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
     timing_DECJ = ufloat(Angle(timing_data.loc[PSR_name, 'dec_t']).rad, Angle(timing_data.loc[PSR_name, "dec_te"]).rad)
     VLBI_DECJ = ufloat(Angle(VLBI_data.loc[PSR_name, "dec_v"]).rad, Angle(VLBI_data.loc[PSR_name, "dec_ve"]).rad)
 
+    print(timing_DECJ.nominal_value - 3 * timing_DECJ.std_dev, timing_DECJ.nominal_value + 3 * timing_DECJ.std_dev)
+    print(VLBI_DECJ.nominal_value - 3 * VLBI_DECJ.std_dev, VLBI_DECJ.nominal_value + 3 * VLBI_DECJ.std_dev)
     DECJ_overlap, DECJ_values = overlap_range(timing_DECJ, VLBI_DECJ, factor, grid_num)
 
     '''
