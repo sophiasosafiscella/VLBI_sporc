@@ -273,7 +273,7 @@ if __name__ == "__main__":
     PSR_name: str = sys.argv[1]
 
     # File containing the timing and VLBI astrometric VLBI_data
-    VLBI_astrometric_data = pd.read_csv("./data/calibrated_vlbi_astrometric_data.csv", index_col=0, header=0)
+    VLBI_astrometric_data = pd.read_csv("./data/frame_tied_vlbi_astrometric_data.csv", index_col=0, header=0)
     timing_astrometric_data = pd.read_csv("./data/timing_astrometric_data_updated.csv", index_col=0, header=0)
     PSR_list = VLBI_astrometric_data.index  # List of pulsars
 
