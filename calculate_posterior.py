@@ -14,10 +14,8 @@ from pint.residuals import Residuals
 import pint.fitter
 from pint_pal import noise_utils
 
-import astropy
 import astropy.units as u
 from astropy.time import Time
-from math import exp
 
 from VLBI_utils import calculate_lnprior, replace_params
 import glob
