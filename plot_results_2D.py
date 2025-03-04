@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from astropy.coordinates import Angle
+import astropy.units as u
 from pint.models import get_model
 from scipy.interpolate import griddata
 from itertools import product
@@ -20,6 +21,18 @@ def find_timing_label(label):
         return 'pmdec_t'
     elif label == 'PX':
         return 'px_t'
+
+def find_timing_error_label(label):
+    if label == 'RAJ':
+        return 'ra_te'
+    elif label == 'DECJ':
+        return 'dec_te'
+    elif label == 'PMRA':
+        return 'pmra_te'
+    elif label == 'PMDEC':
+        return 'pmdec_te'
+    elif label == 'PX':
+        return 'px_te'
 
 def plot_contour(df, best_sol, timing_astrometric_data, tm, x_label, y_label, ax):
 
@@ -50,17 +63,56 @@ def plot_contour(df, best_sol, timing_astrometric_data, tm, x_label, y_label, ax
     # Interpolate w values on grid
 #    zi = griddata((x, y), w, (xi, yi), method='linear')
 
+    if x_label == 'RAJ':
+        timing_RAJ = Angle(timing_astrometric_data['ra_t'], unit=u.hourangle)
+        ref_RAJ = Angle(f"{int(timing_RAJ.hms[0])}h{int(timing_RAJ.hms[1])}m{round(timing_RAJ.hms[2], 1)}s")
+        x = (Angle(x_values, unit=u.hourangle) - ref_RAJ).hms[2] * 1000.0
+        x_timing = (timing_RAJ - ref_RAJ).hms[2] * 1000.0
+        x_timing_error = Angle(timing_astrometric_data['ra_te'], unit=u.hourangle).hms[2] * 1000.0
+        ax.set_xlabel("$\mathrm{RAJ} - " + f"{ref_RAJ:latex}"[1:-1] + " [\mathrm{mas}]$")
+    elif x_label == 'DECJ':
+        timing_DECJ = Angle(timing_astrometric_data['dec_t'], unit=u.degree)
+        ref_DECJ = Angle(f"{int(timing_DECJ.dms[0])}d{int(abs(timing_DECJ.dms[1]))}m{round(abs(timing_DECJ.dms[2]), 1)}s")
+        x = (Angle(x_values, unit=u.degree) - ref_DECJ).dms[2] * 1000.0
+        x_timing = (timing_DECJ - ref_DECJ).dms[2] * 1000.0
+        x_timing_error = Angle(timing_astrometric_data['dec_te'], unit=u.degree).dms[2] * 1000.0
+        ax.set_xlabel("$\mathrm{DECJ} - (" + f"{ref_DECJ:latex}"[1:-1] + ") [\mathrm{mas}]$")
+    else:
+        x = x_values
+        x_timing = timing_astrometric_data[find_timing_label(x_label)],
+        x_timing_error = timing_astrometric_data[find_timing_error_label(x_label)]
+        ax.set_xlabel(f"{x_label} [{getattr(tm, x_label).units}]")
+
+    if y_label == 'RAJ':
+        timing_RAJ = Angle(timing_astrometric_data['ra_t'], unit=u.hourangle)
+        ref_RAJ = Angle(f"{int(timing_RAJ.hms[0])}h{int(timing_RAJ.hms[1])}m{round(timing_RAJ.hms[2], 1)}s")
+        y = (Angle(y_values, unit=u.hourangle) - ref_RAJ).hms[2] * 1000.0
+        y_timing = (timing_RAJ - ref_RAJ).hms[2] * 1000.0
+        y_timing_error = Angle(timing_astrometric_data['ra_te'], unit=u.hourangle).hms[2] * 1000.0
+        ax.set_ylabel("$\mathrm{RAJ} - " + f"{ref_RAJ:latex}"[1:-1] + " [\mathrm{mas}]$")
+    elif y_label == 'DECJ':
+        timing_DECJ = Angle(timing_astrometric_data['dec_t'], unit=u.degree)
+        ref_DECJ = Angle(f"{int(timing_DECJ.dms[0])}d{int(abs(timing_DECJ.dms[1]))}m{round(abs(timing_DECJ.dms[2]), 1)}s")
+        y = (Angle(y_values, unit=u.degree) - ref_DECJ).dms[2] * 1000.0
+        y_timing = (timing_DECJ - ref_DECJ).dms[2] * 1000.0
+        y_timing_error = Angle(timing_astrometric_data['dec_te'], unit=u.degree).dms[2] * 1000.0
+        ax.set_ylabel("$\mathrm{DECJ} - (" + f"{ref_DECJ:latex}"[1:-1] + ") [\mathrm{mas}]$")
+    else:
+        y = y_values
+        y_timing = timing_astrometric_data[find_timing_label(y_label)]
+        y_timing_error = timing_astrometric_data[find_timing_error_label(y_label)]
+        ax.set_ylabel(f"{y_label} [{getattr(tm, y_label).units}]")
+
+
     # Plot contour
     print(np.shape(z_values))
-    contour = ax.contourf(x_values, y_values, z_values, levels=30, cmap="viridis")
+    contour = ax.contourf(x, y, z_values, levels=30, cmap="viridis")
     plt.colorbar(contour, ax=ax, label='posterior')
 
     # Extract the reference timing values
-    ax.scatter(timing_astrometric_data[find_timing_label(x_label)],
-               timing_astrometric_data[find_timing_label(y_label)], marker='x', c='red', s=400)
+#    ax.scatter(x=x_timing, y=y_timing, marker='x', c='red', s=400)
+    ax.errorbar(x=x_timing, y=y_timing, xerr=x_timing_error, yerr=y_timing_error, marker='x', c='red')
 
-    ax.set_xlabel(f"{x_label} [{getattr(tm, x_label).units}]")
-    ax.set_ylabel(f"{y_label} [{getattr(tm, y_label).units}]")
 #    ax.set_title(f'{x_col} vs {y_col} with {w_col} as color')
 
 
