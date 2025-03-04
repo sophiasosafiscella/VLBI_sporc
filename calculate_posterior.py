@@ -84,7 +84,6 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
         initial_fit = pint.fitter.Fitter.auto(toas, eq_timing_model)
         try:
             initial_fit.fit_toas(maxiter=15)
-            print(type(initial_fit))
             print("Initial fit done.")
             refitted_timing_model = initial_fit.model
         except:
