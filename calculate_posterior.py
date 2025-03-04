@@ -70,7 +70,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 #    # the original epoch and not to the new epoch that was used to calculate the overlap between VLBI and timing
 #    eq_timing_model.change_posepoch(original_epoch)
 
-    if os.path.exists(new_par_file):
+    if os.path.exists(new_par_file) and resume:
         newmodel_ec = get_model(new_par_file)  # Ecliptical coordiantes
         newmodel_eq = ec_timing_model.as_ICRS(epoch=newmodel_ec.POSEPOCH.value)
         newmodel_with_noise = noise_utils.add_noise_to_model(newmodel_eq, save_corner=False, base_dir=chains_dir)
@@ -83,11 +83,15 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
         print("Performing the initial fit...")
         initial_fit = pint.fitter.Fitter.auto(toas, eq_timing_model)
         try:
-            initial_fit.fit_toas(maxiter=5)
+            initial_fit.fit_toas(maxiter=15)
+            print(type(initial_fit))
             print("Initial fit done.")
+            refitted_timing_model = initial_fit.model
         except:
-            print("Timing solution failed")
-            return [[0.0]]
+            print("Fitting new timing solution failed")
+            return initial_fit.resids.lnlikelihood()
+#            return [[0.0]]
+
 
     #    except LinAlgError:
     #        print(f"LinAlgError at iteration {timing_solution.Index}")
@@ -97,9 +101,9 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
         if not os.path.exists(chains_dir):
             os.mkdir(chains_dir)
 
-        noise_utils.model_noise(eq_timing_model, toas, vary_red_noise=True, n_iter=int(5e4), using_wideband=False,
+        noise_utils.model_noise(refitted_timing_model, toas, vary_red_noise=True, n_iter=int(5e4), using_wideband=False,
                                 resume=resume, run_noise_analysis=True, base_op_dir=chains_dir)
-        newmodel = noise_utils.add_noise_to_model(eq_timing_model, save_corner=False, base_dir=chains_dir)
+        newmodel = noise_utils.add_noise_to_model(refitted_timing_model, save_corner=False, base_dir=chains_dir)
         print("Done!")
 
         # Final fit
@@ -107,16 +111,22 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 
         try:
             print("Fitting the new model")
-            final_fit.fit_toas()
+            final_fit.fit_toas(maxiter=15)
+            final_fit_model = final_fit.model
             final_fit_resids = final_fit.resids
             final_fit.model.write_parfile(new_par_file)  # Save the new .par fil
             print("New model fitting done.")
-        except LinAlgError:
-            print(f"LinAlgError at iteration {timing_solution.Index}")
-            return [[0.0]]
+        except:
+            print("Fitting new timing solution failed")
+            return final_fit.resids.lnlikelihood()
+
+    #            return [[0.0]]
+#        except LinAlgError:
+#            print(f"LinAlgError at iteration {timing_solution.Index}")
+#            return [[0.0]]
 
     # Calculate the posterior for this model and TOAs
-    ln_prior = calculate_lnprior(eq_timing_model, VLBI_astrometric_data_file, PSR_name)
+    ln_prior = calculate_lnprior(final_fit_model, VLBI_astrometric_data_file, PSR_name)
     ln_likelihood = final_fit_resids.lnlikelihood()
     ln_posterior = ln_prior + ln_likelihood
     posterior = ln_posterior
