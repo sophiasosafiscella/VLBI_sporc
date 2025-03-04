@@ -112,8 +112,8 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
             print("Fitting the new model")
             final_fit.fit_toas(maxiter=15)
             final_fit_model = final_fit.model
+            final_fit_model.write_parfile(new_par_file)  # Save the new .par fil
             final_fit_resids = final_fit.resids
-            final_fit.model.write_parfile(new_par_file)  # Save the new .par fil
             print("New model fitting done.")
         except:
             print("Fitting new timing solution failed")
