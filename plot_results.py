@@ -6,19 +6,17 @@ import astropy.units as u
 from uncertainties import ufloat
 import sys
 
-PSR_names = ["J0030+0451", "J2145-0750", "J2010-1323"]
+PSR_names = ["J0030+0451"]
 VLBI_color = "rgba(0, 204, 150, 0.5)"  # px.colors.qualitative.Pastel1[2]
 timing_color = "rgba(99, 110, 250, 0.5)"  # px.colors.qualitative.Pastel1[1]
 
 # Load the timing solution
 timing_astrometric_data = pd.read_csv("./data/timing_astrometric_data_updated.csv", index_col=0, header=0)
-VLBI_astrometric_data = pd.read_csv("./data/calibrated_vlbi_astrometric_data.csv", index_col=0, header=0)
+VLBI_astrometric_data = pd.read_csv("./data/frame_tied_vlbi_astrometric_data.csv", index_col=0, header=0)
 
-fig = make_subplots(rows=3, cols=5)
+fig = make_subplots(rows=1, cols=5)
 
 for row, PSR_name in enumerate(PSR_names):
-
-    print(PSR_name)
 
     posteriors_file: str = f"./results/timing_posteriors_frame_tie/{PSR_name}_consolidated_timing_posteriors.pkl"
 
@@ -31,6 +29,8 @@ for row, PSR_name in enumerate(PSR_names):
     # Find the solution with the highest posterior
     best_sol_idx = df['posterior'].idxmax()
     best_sol = df.loc[best_sol_idx].to_dict()
+
+    print(best_sol)
 
     # RAJ
     sols = df[(df['PX'] == best_sol['PX']) & (df['DECJ'] == best_sol['DECJ']) &
@@ -52,12 +52,12 @@ for row, PSR_name in enumerate(PSR_names):
                   row=row+1, col=1)
 
     fig.add_vline(x=timing_deltaRAJ_ms, line_width=3, line_dash="dash", line_color=timing_color, row=row + 1, col=1)
-#    fig.add_vrect(x0=timing_deltaRAJ_ms - 3 * timing_RAJ_err, x1=timing_deltaRAJ_ms + 3 * timing_RAJ_err, line_width=0,
-#                  fillcolor=timing_color, opacity=0.3, row=row+1, col=1)
+    fig.add_vrect(x0=timing_deltaRAJ_ms - 3 * timing_RAJ_err, x1=timing_deltaRAJ_ms + 3 * timing_RAJ_err, line_width=0,
+                  fillcolor=timing_color, opacity=0.3, row=row+1, col=1)
 
     fig.add_vline(x=VLBI_deltaRAJ_ms, line_width=3, line_dash="dash", line_color=VLBI_color, row=row + 1, col=1)
-#    fig.add_vrect(x0=VLBI_deltaRAJ_ms - 3 * VLBI_RAJ_err, x1=VLBI_deltaRAJ_ms + 3 * VLBI_RAJ_err, line_width=0,
-#                  fillcolor=VLBI_color, opacity=0.3, row=row + 1, col=1)
+    fig.add_vrect(x0=VLBI_deltaRAJ_ms - 3 * VLBI_RAJ_err, x1=VLBI_deltaRAJ_ms + 3 * VLBI_RAJ_err, line_width=0,
+                  fillcolor=VLBI_color, opacity=0.3, row=row + 1, col=1)
 
     fig.update_yaxes(showticklabels=False, row=row+1, col=1)
     fig.update_xaxes(title_text="$\mathrm{RAJ} - " + f"{ref_RAJ:latex}"[1:-1] + " [\mathrm{mas}]$", row=row+1, col=1)
@@ -82,12 +82,12 @@ for row, PSR_name in enumerate(PSR_names):
                   row=row+1, col=2)
 
     fig.add_vline(x=timing_deltaDECJ_ms, line_width=3, line_dash="dash", line_color=timing_color, row=row+1, col=2)
-#    fig.add_vrect(x0=timing_deltaDECJ_ms - 3 * timing_DECJ_err, x1=timing_deltaDECJ_ms + 3 * timing_DECJ_err, line_width=0,
-#                  fillcolor=timing_color, opacity=0.3, row=row + 1, col=2)
+    fig.add_vrect(x0=timing_deltaDECJ_ms - 3 * timing_DECJ_err, x1=timing_deltaDECJ_ms + 3 * timing_DECJ_err, line_width=0,
+                  fillcolor=timing_color, opacity=0.3, row=row + 1, col=2)
 
     fig.add_vline(x=VLBI_deltaDECJ_ms, line_width=3, line_dash="dash", line_color=VLBI_color, row=row+1, col=2)
-#    fig.add_vrect(x0=VLBI_deltaDECJ_ms - 3 * VLBI_DECJ_err, x1=VLBI_deltaDECJ_ms + 3 * VLBI_DECJ_err, line_width=0,
-#                  fillcolor=VLBI_color, opacity=0.3, row=row + 1, col=2)
+    fig.add_vrect(x0=VLBI_deltaDECJ_ms - 3 * VLBI_DECJ_err, x1=VLBI_deltaDECJ_ms + 3 * VLBI_DECJ_err, line_width=0,
+                  fillcolor=VLBI_color, opacity=0.3, row=row + 1, col=2)
 
     fig.update_yaxes(showticklabels=False, row=row+1, col=2)
     fig.update_xaxes(title_text="$\mathrm{DECJ} - (" + f"{ref_DECJ:latex}"[1:-1] + ") [\mathrm{mas}]$", row=row+1, col=2)
@@ -107,12 +107,12 @@ for row, PSR_name in enumerate(PSR_names):
 
     fig.add_vline(x=timing_PX.nominal_value, line_width=3, line_dash="dash",
                   line_color=timing_color, row=row+1, col=3)
-#    fig.add_vrect(x0=timing_PX.nominal_value - 3 * timing_PX.std_dev, x1=timing_PX.nominal_value + 3 * timing_PX.std_dev, line_width=0,
-#                  fillcolor=timing_color, opacity=0.3, row=row + 1, col=3)
+    fig.add_vrect(x0=timing_PX.nominal_value - 3 * timing_PX.std_dev, x1=timing_PX.nominal_value + 3 * timing_PX.std_dev, line_width=0,
+                  fillcolor=timing_color, opacity=0.3, row=row + 1, col=3)
 
     fig.add_vline(x=VLBI_PX, line_width=3, line_dash="dash", line_color=VLBI_color, row=row + 1, col=3)
-#    fig.add_vrect(x0=VLBI_PX - 3 * VLBI_PX_uL, x1=VLBI_PX + 3 * VLBI_PX_uR, line_width=0,
-#                  fillcolor=VLBI_color, opacity=0.3, row=row + 1, col=3)
+    fig.add_vrect(x0=VLBI_PX - 3 * VLBI_PX_uL, x1=VLBI_PX + 3 * VLBI_PX_uR, line_width=0,
+                  fillcolor=VLBI_color, opacity=0.3, row=row + 1, col=3)
 
     fig.update_yaxes(showticklabels=False, row=row+1, col=3)
     fig.update_xaxes(title_text="PX [mas]", row=row+1, col=3)
@@ -132,12 +132,12 @@ for row, PSR_name in enumerate(PSR_names):
 
     fig.add_vline(x=timing_astrometric_data.loc[PSR_name, "pmra_t"], line_width=3, line_dash="dash",
                   line_color=timing_color, row=row+1, col=4)
-#    fig.add_vrect(x0=PMRA_timing.nominal_value - 3 * PMRA_timing.std_dev, x1=PMRA_timing.nominal_value + 3 * PMRA_timing.std_dev, line_width=0,
-#                  fillcolor=timing_color, opacity=0.3, row=row + 1, col=4)
+    fig.add_vrect(x0=PMRA_timing.nominal_value - 3 * PMRA_timing.std_dev, x1=PMRA_timing.nominal_value + 3 * PMRA_timing.std_dev, line_width=0,
+                  fillcolor=timing_color, opacity=0.3, row=row + 1, col=4)
 
     fig.add_vline(x=VLBI_PMRA, line_width=3, line_dash="dash", line_color=VLBI_color, row=row + 1, col=4)
-#    fig.add_vrect(x0=VLBI_PMRA - 3 * VLBI_PMRA_uL, x1=VLBI_PMRA + 3 * VLBI_PMRA_uR, line_width=0,
-#                  fillcolor=VLBI_color, opacity=0.3, row=row + 1, col=4)
+    fig.add_vrect(x0=VLBI_PMRA - 3 * VLBI_PMRA_uL, x1=VLBI_PMRA + 3 * VLBI_PMRA_uR, line_width=0,
+                  fillcolor=VLBI_color, opacity=0.3, row=row + 1, col=4)
 
     fig.update_yaxes(showticklabels=False, row=row+1, col=4)
     fig.update_xaxes(title_text="PMRA [mas/yr]", row=row+1, col=4)
@@ -157,12 +157,12 @@ for row, PSR_name in enumerate(PSR_names):
 
     fig.add_vline(x=PMDEC_timing.nominal_value, line_width=3, line_dash="dash",
                   line_color=timing_color, row=row+1, col=5)
-#    fig.add_vrect(x0=PMDEC_timing.nominal_value - 3 * PMDEC_timing.std_dev, x1=PMDEC_timing.nominal_value + 3 * PMDEC_timing.std_dev, line_width=0,
-#                  fillcolor=timing_color, opacity=0.3, row=row + 1, col=5)
+    fig.add_vrect(x0=PMDEC_timing.nominal_value - 3 * PMDEC_timing.std_dev, x1=PMDEC_timing.nominal_value + 3 * PMDEC_timing.std_dev, line_width=0,
+                  fillcolor=timing_color, opacity=0.3, row=row + 1, col=5)
 
     fig.add_vline(x=VLBI_PMDEC, line_width=3, line_dash="dash", line_color=VLBI_color, row=row+1, col=5)
-#    fig.add_vrect(x0=VLBI_PMDEC - 3 * VLBI_PMDEC_uL, x1=VLBI_PMDEC + 3 * VLBI_PMDEC_uR, line_width=0,
-#                  fillcolor=VLBI_color, opacity=0.3, row=row + 1, col=5)
+    fig.add_vrect(x0=VLBI_PMDEC - 3 * VLBI_PMDEC_uL, x1=VLBI_PMDEC + 3 * VLBI_PMDEC_uR, line_width=0,
+                  fillcolor=VLBI_color, opacity=0.3, row=row + 1, col=5)
 
     fig.update_yaxes(showticklabels=False, row=row+1, col=5)
     fig.update_xaxes(title_text="PMDEC [mas/yr]", row=row+1, col=5)
@@ -171,10 +171,7 @@ for row, PSR_name in enumerate(PSR_names):
 
     fig.update_xaxes(tickformat=".3f")
     fig.update_layout(showlegend=False)
-    fig.update_layout(
-        autosize=False,
-        width=1200,
-        height=700,
-    )
+#    fig.update_layout(autosize=True, hovermode="x")
+    fig.update_layout(autosize=False, width=1200, height=700)
 
 fig.show()

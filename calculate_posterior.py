@@ -81,7 +81,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
         print("Performing the initial fit...")
         initial_fit = pint.fitter.Fitter.auto(toas, eq_timing_model)
         try:
-            initial_fit.fit_toas(maxiter=15)
+            initial_fit.fit_toas()
             print("Initial fit done.")
             refitted_timing_model = initial_fit.model
         except:
@@ -108,7 +108,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 
         try:
             print("Fitting the new model")
-            final_fit.fit_toas(maxiter=15)
+            final_fit.fit_toas()
             final_fit_model = final_fit.model
             final_fit_model.write_parfile(new_par_file)  # Save the new .par fil
             final_fit_resids = final_fit.resids
@@ -178,5 +178,4 @@ if __name__ == "__main__":
 
     # Save the timing solution with its posterior
     res_np = np.asarray([idx, POSEPOCH, RAJ, DECJ, PX, PMRA, PMDEC, posterior])
-    print(res_np)
     np.save(posteriors_dir + "/" + str(idx) + "_posterior.npy", res_np)

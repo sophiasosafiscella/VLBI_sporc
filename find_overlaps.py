@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 import astropy.units as u
 from astropy.coordinates import Angle
@@ -75,9 +76,33 @@ def pm_overlap_range(timing_PMRA,timing_PMDEC, mu_PM_VLBI, uL_PM_VLBI, uR_PM_VLB
         return None, None
 
 
+def plot_overlap(param, overlap, timing, VLBI, fig, row, col):
+
+    VLBI_color = "rgba(0, 204, 150, 0.5)"  # px.colors.qualitative.Pastel1[2]
+    timing_color = "rgba(99, 110, 250, 0.5)"  # px.colors.qualitative.Pastel1[1]
+
+    fig.add_trace(go.Scatter(x=overlap, y=np.full(len(overlap), 1.0), mode='lines+markers', marker=dict(color='red')),
+                  row=row, col=col)
+
+    fig.add_vline(x=timing.nominal_value, line_width=3, line_dash="dash", line_color=timing_color, row=row, col=col)
+    fig.add_vrect(x0=timing.nominal_value - 3 * timing.std_dev, x1=timing.nominal_value + 3 * timing.std_dev, line_width=0,
+                  fillcolor=timing_color, opacity=0.3, row=row, col=col)
+
+    fig.add_vline(x=VLBI.nominal_value, line_width=3, line_dash="dash", line_color=VLBI_color, row=row, col=col)
+    fig.add_vrect(x0=VLBI.nominal_value - 3 * VLBI.std_dev, x1=VLBI.nominal_value + 3 * VLBI.std_dev, line_width=0,
+                  fillcolor=VLBI_color, opacity=0.3, row=row, col=col)
+
+    fig.update_yaxes(showticklabels=False, row=row, col=col)
+    fig.update_xaxes(title_text=param, row=row, col=col)
+
+    return
+
+
 def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: int = 10, plot=False):
     VLBI_color = "rgba(0, 204, 150, 0.5)"  # px.colors.qualitative.Pastel1[2]
     timing_color = "rgba(99, 110, 250, 0.5)"  # px.colors.qualitative.Pastel1[1]
+
+#    fig = make_subplots(rows=1, cols=4)
 
     # ------------------------------RAJ------------------------------
     timing_RAJ = ufloat(Angle(timing_data.loc[PSR_name, "ra_t"]).rad, Angle(timing_data.loc[PSR_name, "ra_te"]).rad)
@@ -85,13 +110,15 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
 
     RAJ_overlap, RAJ_values = overlap_range(timing_RAJ, VLBI_RAJ, factor, grid_num)
 
+#    plot_overlap("RAJ", RAJ_values, timing_RAJ, VLBI_RAJ, fig, 1, 1)
+
     # ------------------------------DECJ------------------------------
     timing_DECJ = ufloat(Angle(timing_data.loc[PSR_name, 'dec_t']).rad, Angle(timing_data.loc[PSR_name, "dec_te"]).rad)
     VLBI_DECJ = ufloat(Angle(VLBI_data.loc[PSR_name, "dec_v"]).rad, Angle(VLBI_data.loc[PSR_name, "dec_ve"]).rad)
 
-    print(timing_DECJ.nominal_value - 3 * timing_DECJ.std_dev, timing_DECJ.nominal_value + 3 * timing_DECJ.std_dev)
-    print(VLBI_DECJ.nominal_value - 3 * VLBI_DECJ.std_dev, VLBI_DECJ.nominal_value + 3 * VLBI_DECJ.std_dev)
     DECJ_overlap, DECJ_values = overlap_range(timing_DECJ, VLBI_DECJ, factor, grid_num)
+
+#    plot_overlap("DECJ", DECJ_values, timing_DECJ, VLBI_DECJ, fig, 1, 2)
 
     '''
     # ------------------------------PMRA------------------------------
@@ -219,6 +246,8 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
         plt.savefig("./results/frame_tie/" + PSR_name + "_PM.png", bbox_inches='tight')
         plt.show()
 
+#    plot_overlap("PM", DECJ_values, timing_DECJ, VLBI_DECJ, fig, 1, 2)
+
     # ------------------------------Parallax------------------------------
     timing_PX = ufloat(timing_data.loc[PSR_name, "px_t"], timing_data.loc[PSR_name, "px_te"])
 
@@ -272,7 +301,9 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
 
 if __name__ == "__main__":
 
-    PSR_name: str = sys.argv[1]
+#    PSR_name: str = sys.argv[1]
+
+    PSR_name = "J0030+0451"
 
     # File containing the timing and VLBI astrometric VLBI_data
     VLBI_astrometric_data = pd.read_csv("./data/frame_tied_vlbi_astrometric_data.csv", index_col=0, header=0)
