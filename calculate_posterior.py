@@ -173,7 +173,6 @@ if __name__ == "__main__":
     VLBI_astrometric_data_file: str = "./data/calibrated_vlbi_astrometric_data.csv"
 
     # Names of the .tim and .par files
-    print(f"./data/NG_15yr_dataset/tim/{PSR_name}_PINT*tim")
     timfile: str = glob.glob(f"./data/NG_15yr_dataset/tim/{PSR_name}_PINT*tim")[0]
     parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}_PINT*par")[0]
 
