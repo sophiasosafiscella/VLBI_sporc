@@ -62,7 +62,7 @@ if [ "\$end_idx" -gt "$n_lines" ]; then
 fi
 
 # Process lines from config file, skipping the header
-sed -n "\${start_idx},\${end_idx}p" "$config" | while read -r ArrayTaskID RAJ DECJ PX PMRA PMDEC POSEPOCH; do
+while read -r ArrayTaskID RAJ DECJ PX PMRA PMDEC POSEPOCH; do
     output_file="output_${SLURM_ARRAY_JOB_ID}_\${ArrayTaskID}.txt"
     echo "\${PSR_name}, \${ArrayTaskID}, RAJ = \${RAJ}, DECJ = \${DECJ}, PX = \${PX}, PMRA = \${PMRA}, PMDEC = \${PMDEC}, POSEPOCH = \${POSEPOCH}." >> "\$output_file"
 
@@ -71,7 +71,8 @@ sed -n "\${start_idx},\${end_idx}p" "$config" | while read -r ArrayTaskID RAJ DE
     echo " "
 
     srun --mem-per-cpu=10g python3 -u calculate_posterior.py "\${PSR_name}" "\${ArrayTaskID}" "\${RAJ}" "\${DECJ}" "\${PX}" "\${PMRA}" "\${PMDEC}" "\${POSEPOCH}"
-done
+done < <(sed -n "\${start_idx},\${end_idx}p" "$config")
+
 
 EOF
 
