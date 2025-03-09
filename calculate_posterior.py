@@ -157,6 +157,8 @@ if __name__ == "__main__":
     #PSR_name, idx, RAJ, DECJ, PX, PMRA, PMDEC, POSEPOCH = "J0030+0451", 0, "0:30:27.4249447", "4:51:39.7153", 2.8773835086748143, -6.2578345561116056, 0.06706353456507053, 57849.0
     #PSR_name, idx, RAJ, DECJ, PX,  PMRA, PMDEC = "J0030+0451", 1400, "0:30:27.42512704", "4:51:39.7153", 2.8773835086748143, -6.2578345561116056, 0.06706353456507053
 
+    print(PSR_name, idx, RAJ, DECJ, PX, PMRA, PMDEC, POSEPOCH)
+
     timing_solution_dict = {"Index": idx, "RAJ": RAJ, "DECJ": DECJ, "PX": PX, "PMRA": PMRA, "PMDEC": PMDEC, "POSEPOCH": POSEPOCH}
 
     # Convert dictionary to DataFrame
@@ -170,6 +172,7 @@ if __name__ == "__main__":
     VLBI_astrometric_data_file: str = "./data/calibrated_vlbi_astrometric_data.csv"
 
     # Names of the .tim and .par files
+    print(f"./data/NG_15yr_dataset/tim/{PSR_name}_PINT*tim")
     timfile: str = glob.glob(f"./data/NG_15yr_dataset/tim/{PSR_name}_PINT*tim")[0]
     parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}_PINT*par")[0]
 
