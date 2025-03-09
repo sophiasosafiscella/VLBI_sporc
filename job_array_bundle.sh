@@ -73,7 +73,7 @@ while read -r ArrayTaskID RAJ DECJ PX PMRA PMDEC POSEPOCH; do
     echo "\${PSR_name}, \${ArrayTaskID}, RAJ = \${RAJ}, DECJ = \${DECJ}, PX = \${PX}, PMRA = \${PMRA}, PMDEC = \${PMDEC}, POSEPOCH = \${POSEPOCH}."
     echo " "
 
-    srun --mem-per-cpu=10g python3 -u calculate_posterior.py "\${PSR_name}" "\${ArrayTaskID}" "\${RAJ}" "\${DECJ}" "\${PX}" "\${PMRA}" "\${PMDEC}" "\${POSEPOCH}"
+#    srun --mem-per-cpu=10g python3 -u calculate_posterior.py "\${PSR_name}" "\${ArrayTaskID}" "\${RAJ}" "\${DECJ}" "\${PX}" "\${PMRA}" "\${PMDEC}" "\${POSEPOCH}"
 done < <(sed -n "\${start_idx},\${end_idx}p" "$config")
 
 
