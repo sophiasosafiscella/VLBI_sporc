@@ -84,6 +84,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
             initial_fit.fit_toas()
             print("Initial fit done.")
             refitted_timing_model = initial_fit.model
+            return initial_fit.resids.lnlikelihood()   # ERASE
         except:
             print("Fitting new timing solution failed")
             return initial_fit.resids.lnlikelihood()
