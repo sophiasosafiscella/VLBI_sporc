@@ -41,25 +41,23 @@ source ~/miniconda3/etc/profile.d/conda.sh
 conda activate VLBI
 
 # Define the starting and ending indices for this job
-start_idx=\$((SLURM_ARRAY_TASK_ID * tasks_per_job + 1))  # Skip header
+start_idx=\$((SLURM_ARRAY_TASK_ID * tasks_per_job + 2))  # Start from second line
 end_idx=\$((start_idx + tasks_per_job - 1))
 
+# Ensure we don't go past the total number of lines
 if [ "\$end_idx" -gt "$n_lines" ]; then
     end_idx=$n_lines
 fi
 
-# Process lines from config file
-sed -n "\${start_idx},\${end_idx}p" "$config" | while read -r ArrayTaskID RAJ DECJ PMRA PMDEC PX; do
+# Process lines from config file, skipping the header
+sed -n "\${start_idx},\${end_idx}p" "$config" | while read -r ArrayTaskID RAJ DECJ PX PMRA PMDEC POSEPOCH; do
     output_file="output_${SLURM_ARRAY_JOB_ID}_\${ArrayTaskID}.txt"
-    echo "\${PSR_name}, \${ArrayTaskID}, RAJ = \${RAJ}, DECJ = \${DECJ}, PMRA = \${PMRA}, PMDEC = \${PMDEC}, PX = \${PX}." >> "\$output_file"
+    echo "\${PSR_name}, \${ArrayTaskID}, RAJ = \${RAJ}, DECJ = \${DECJ}, PX = \${PX}, PMRA = \${PMRA}, PMDEC = \${PMDEC}, POSEPOCH = \${POSEPOCH}." >> "\$output_file"
 
-    srun --mem-per-cpu=10g python3 -u calculate_posterior.py "\${PSR_name}" "\${ArrayTaskID}" "\${RAJ}" "\${DECJ}" "\${PMRA}" "\${PMDEC}" "\${PX}"
+    srun --mem-per-cpu=10g python3 -u calculate_posterior.py "\${PSR_name}" "\${ArrayTaskID}" "\${RAJ}" "\${DECJ}" "\${PX}" "\${PMRA}" "\${PMDEC}" "\${POSEPOCH}"
 done
-
-# Cleanup: Remove the job script after execution
-rm -- "\$0"
 
 EOF
 
-# Submit the job
-sbatch "$job_script"
+# Submit the job and remove the original script after submission
+sbatch "$job_script" && rm -f "$job_script"
