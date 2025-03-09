@@ -39,6 +39,7 @@ cat <<EOF > "$job_script"
 config="${config}"
 PSR_name="${PSR_name}"
 tasks_per_job="${tasks_per_job}"
+num_jobs="${num_jobs}"
 
 conda init bash
 source ~/miniconda3/etc/profile.d/conda.sh
