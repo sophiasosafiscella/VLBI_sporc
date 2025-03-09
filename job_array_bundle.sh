@@ -3,7 +3,7 @@
 # Specify the path to the config file
 config=./results/frame_tie/$1_overlap_frame_tie.txt
 PSR_name="$1"
-echo "\${PSR_name}"
+echo \${PSR_name}
 
 # Read the number of lines, skipping the header
 n_lines=$(($(wc -l < "$config") - 1))
