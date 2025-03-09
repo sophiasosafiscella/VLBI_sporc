@@ -47,6 +47,9 @@ conda activate VLBI
 start_idx=\$((SLURM_ARRAY_TASK_ID * tasks_per_job + 2))  # Start from second line
 end_idx=\$((start_idx + tasks_per_job - 1))
 
+# Debug: Check the start and end indices
+echo "Processing lines from \$start_idx to \$end_idx"
+
 # Ensure we don't go past the total number of lines
 if [ "\$end_idx" -gt "$n_lines" ]; then
     end_idx=$n_lines
