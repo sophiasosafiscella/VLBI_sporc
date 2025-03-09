@@ -21,6 +21,8 @@ else
     num_jobs=$(( (n_lines + tasks_per_job - 1) / tasks_per_job ))
 fi
 
+echo "tasks_per_job: $tasks_per_job"
+
 # Generate a unique job script
 timestamp=$(date +"%Y%m%d_%H%M%S")
 job_script="job_script_${timestamp}.sh"
