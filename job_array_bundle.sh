@@ -3,7 +3,6 @@
 # Specify the path to the config file
 config=./results/frame_tie/$1_overlap_frame_tie.txt
 PSR_name="$1"
-echo \${PSR_name}
 
 # Read the number of lines, skipping the header
 n_lines=$(($(wc -l < "$config") - 1))
@@ -36,6 +35,9 @@ cat <<EOF > "$job_script"
 #SBATCH --ntasks=1              # 1 task per job
 #SBATCH --mem-per-cpu=10g       # 10GB RAM per CPU
 #SBATCH --array=0-$((num_jobs - 1))  # Array size
+
+config="${config}"
+PSR_name="${PSR_name}"
 
 conda init bash
 source ~/miniconda3/etc/profile.d/conda.sh
