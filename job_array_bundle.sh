@@ -42,6 +42,7 @@ cat <<EOF > "$job_script"
 
 config="${config}"
 PSR_name="${PSR_name}"
+tasks_per_job="${tasks_per_job}"
 
 conda init bash
 source ~/miniconda3/etc/profile.d/conda.sh
@@ -54,6 +55,7 @@ end_idx=\$((start_idx + tasks_per_job - 1))
 # Debug: Check the start and end indices
 echo "SLURM_ARRAY_TASK_ID = \$SLURM_ARRAY_TASK_ID"
 echo "tasks_per_job = \$tasks_per_job"
+echo "num_jobs = \num_jobs"
 echo "Processing lines from \$start_idx to \$end_idx"
 
 # Ensure we don't go past the total number of lines
