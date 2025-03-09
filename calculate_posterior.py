@@ -178,7 +178,9 @@ if __name__ == "__main__":
 
     # Calculate the posterior
     posterior = calculate_post(PSR_name, timing_solution, timfile, parfile, VLBI_astrometric_data_file, resume=False, plot=False)
+    print("Posterior calculated. Now saving it...")
 
     # Save the timing solution with its posterior
     res_np = np.asarray([idx, POSEPOCH, RAJ, DECJ, PX, PMRA, PMDEC, posterior])
     np.save(posteriors_dir + "/" + str(idx) + "_posterior.npy", res_np)
+    print("Posterior saved. End of calculate_posterior.py")
