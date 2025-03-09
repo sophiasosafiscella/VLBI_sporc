@@ -1,59 +1,65 @@
+#!/bin/bash
+
 # Specify the path to the config file
 config=./results/frame_tie/$1_overlap_frame_tie.txt
 PSR_name="$1"
-n_lines=$(wc -l < "$config")
-n_lines=$((n_lines - 1))  # Adjust for the header (subtract 1 instead of 2)
 
-# Get the maximum allowed job array size
-MaxArraySize=10001  # Replace this with `scontrol show config | grep MaxArraySize | awk '{print $NF}'` if needed
+# Read the number of lines, skipping the header
+n_lines=$(($(wc -l < "$config") - 1))
 
-if (( n_lines > MaxArraySize )); then
-    bundle_mode=true
-    lines_per_job=$(( (n_lines + MaxArraySize - 1) / MaxArraySize ))  # Ensures full coverage
-    array_size=$(( (n_lines + lines_per_job - 1) / lines_per_job ))
+# Dynamically extract MaxArraySize from Slurm config
+MaxArraySize=$(scontrol show config | awk -F= '/MaxArraySize/ {print $2}' | tr -d ' ')
+
+# Determine bundling strategy
+if [ "$n_lines" -le "$MaxArraySize" ]; then
+    tasks_per_job=1
+    num_jobs=$n_lines
 else
-    bundle_mode=false
-    array_size=$n_lines
+    tasks_per_job=$(( (n_lines + MaxArraySize - 1) / MaxArraySize ))
+    num_jobs=$(( (n_lines + tasks_per_job - 1) / tasks_per_job ))
 fi
 
-# Generate the Slurm script dynamically
-cat <<EOF > job_script.sh
+# Generate a unique job script
+timestamp=$(date +"%Y%m%d_%H%M%S")
+job_script="job_script_${timestamp}.sh"
+
+cat <<EOF > "$job_script"
 #!/bin/bash -l
 
-#SBATCH --job-name=VLBI
-#SBATCH --account=vlbi
-#SBATCH --partition=tier3
-#SBATCH --output=%x_%A_%a.out
-#SBATCH --error=%x_%A_%a.err
-#SBATCH --time=0-20:00:00
-#SBATCH --ntasks=1
-#SBATCH --mem-per-cpu=10g
-#SBATCH --array=0-${array_size}
+#SBATCH --job-name=VLBI         # Name of your job
+#SBATCH --account=vlbi          # Your Slurm account
+#SBATCH --partition=tier3       # Run on tier3
+#SBATCH --output=%x_%A_%a.out   # Output file
+#SBATCH --error=%x_%A_%a.err    # Error file
+#SBATCH --time=0-20:00:00       # 20-hour time limit
+#SBATCH --ntasks=1              # 1 task per job
+#SBATCH --mem-per-cpu=10g       # 10GB RAM per CPU
+#SBATCH --array=0-$((num_jobs - 1))  # Array size
 
 conda init bash
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate VLBI
 
-config="${config}"
-PSR_name="${PSR_name}"
+# Define the starting and ending indices for this job
+start_idx=\$((SLURM_ARRAY_TASK_ID * tasks_per_job + 1))  # Skip header
+end_idx=\$((start_idx + tasks_per_job - 1))
 
-if [[ "$bundle_mode" == "true" ]]; then
-    start=\$(( SLURM_ARRAY_TASK_ID * $lines_per_job + 2 ))  # Start at line 2
-    end=\$(( start + $lines_per_job - 1 ))
-    [[ \$end -gt $((n_lines + 1)) ]] && end=$((n_lines + 1))  # Account for header
-else
-    start=\$(( SLURM_ARRAY_TASK_ID + 2 ))  # Adjust for zero-based index and header
-    end=\$start
+if [ "\$end_idx" -gt "$n_lines" ]; then
+    end_idx=$n_lines
 fi
 
-# Read only from line 2 onwards
-awk "NR>=\$start && NR<=\$end" "\$config" | while read -r ArrayTaskID RAJ DECJ PX PMRA PMDEC POSEPOCH; do
-    echo "\${PSR_name}, \${ArrayTaskID}, RAJ = \${RAJ}, DECJ = \${DECJ}, PX = \${PX}, PMRA = \${PMRA}, PMDEC = \${PMDEC}, POSEPOCH = \${POSEPOCH}." >> output.txt
+# Process lines from config file
+sed -n "\${start_idx},\${end_idx}p" "$config" | while read -r ArrayTaskID RAJ DECJ PMRA PMDEC PX; do
+    output_file="output_${SLURM_ARRAY_JOB_ID}_\${ArrayTaskID}.txt"
+    echo "\${PSR_name}, \${ArrayTaskID}, RAJ = \${RAJ}, DECJ = \${DECJ}, PMRA = \${PMRA}, PMDEC = \${PMDEC}, PX = \${PX}." >> "\$output_file"
 
-    srun --mem-per-cpu=10g python3 -u calculate_posterior.py "\${PSR_name}" "\${ArrayTaskID}" "\${RAJ}" "\${DECJ}" "\${PX}" "\${PMRA}" "\${PMDEC}" "\${POSEPOCH}"
+    srun --mem-per-cpu=10g python3 -u calculate_posterior.py "\${PSR_name}" "\${ArrayTaskID}" "\${RAJ}" "\${DECJ}" "\${PMRA}" "\${PMDEC}" "\${PX}"
 done
+
+# Cleanup: Remove the job script after execution
+rm -- "\$0"
 
 EOF
 
-# Submit the job!
-sbatch job_script.sh
+# Submit the job
+sbatch "$job_script"

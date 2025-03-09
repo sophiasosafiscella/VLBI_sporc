@@ -301,9 +301,7 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
 
 if __name__ == "__main__":
 
-#    PSR_name: str = sys.argv[1]
-
-    PSR_name = "J0030+0451"
+    PSR_name: str = sys.argv[1]
 
     # File containing the timing and VLBI astrometric VLBI_data
     VLBI_astrometric_data = pd.read_csv("./data/frame_tied_vlbi_astrometric_data.csv", index_col=0, header=0)
@@ -313,7 +311,7 @@ if __name__ == "__main__":
     print(f"Finding the possible timing solutions for {PSR_name}")
 
     # FIND THE OVERLAP BETWEEN THE TIMING AND V LBI SOLUTIONS
-    solutions = find_solutions(PSR_name, VLBI_astrometric_data, timing_astrometric_data, grid_num=10, plot=False)
+    solutions = find_solutions(PSR_name, VLBI_astrometric_data, timing_astrometric_data, grid_num=8, plot=False)
 
     if solutions:
         overlap_df = pd.DataFrame(data=solutions, columns=["RA", "DEC", "PX", "PM"])

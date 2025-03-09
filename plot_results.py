@@ -30,8 +30,6 @@ for row, PSR_name in enumerate(PSR_names):
     best_sol_idx = df['posterior'].idxmax()
     best_sol = df.loc[best_sol_idx].to_dict()
 
-    print(best_sol)
-
     # RAJ
     sols = df[(df['PX'] == best_sol['PX']) & (df['DECJ'] == best_sol['DECJ']) &
               (df['PMRA'] == best_sol['PMRA']) & (df['PMDEC'] == best_sol['PMDEC'])]
