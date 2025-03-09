@@ -10,8 +10,6 @@ n_lines=$(($(wc -l < "$config") - 1))
 # Dynamically extract MaxArraySize from Slurm config
 MaxArraySize=$(scontrol show config | awk -F= '/MaxArraySize/ {print $2}' | tr -d ' ')
 
-echo "MaxArraySize: $MaxArraySize"
-
 # Determine bundling strategy
 if [ "$n_lines" -le "$MaxArraySize" ]; then
     tasks_per_job=1
@@ -20,8 +18,6 @@ else
     tasks_per_job=$(( (n_lines + MaxArraySize - 1) / MaxArraySize ))
     num_jobs=$(( (n_lines + tasks_per_job - 1) / tasks_per_job ))
 fi
-
-echo "tasks_per_job: $tasks_per_job"
 
 # Generate a unique job script
 timestamp=$(date +"%Y%m%d_%H%M%S")
