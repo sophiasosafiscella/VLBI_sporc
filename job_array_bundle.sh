@@ -48,6 +48,7 @@ start_idx=\$((SLURM_ARRAY_TASK_ID * tasks_per_job + 2))  # Start from second lin
 end_idx=\$((start_idx + tasks_per_job - 1))
 
 # Debug: Check the start and end indices
+echo "SLURM_ARRAY_TASK_ID = \$SLURM_ARRAY_TASK_ID"
 echo "Processing lines from \$start_idx to \$end_idx"
 
 # Ensure we don't go past the total number of lines
