@@ -9,6 +9,7 @@ n_lines=$(($(wc -l < "$config") - 1))
 
 # Dynamically extract MaxArraySize from Slurm config
 MaxArraySize=$(scontrol show config | awk -F= '/MaxArraySize/ {print $2}' | tr -d ' ')
+echo "MaxArraySize = \$MaxArraySize"
 
 # Determine bundling strategy
 if [ "$n_lines" -le "$MaxArraySize" ]; then
