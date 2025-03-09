@@ -34,8 +34,9 @@ cat <<EOF > "$job_script"
 #SBATCH --time=0-20:00:00       # 20-hour time limit
 #SBATCH --ntasks=1              # 1 task per job
 #SBATCH --mem-per-cpu=10g       # 10GB RAM per CPU
-#SBATCH --array=0-$((num_jobs - 1))  # Array size
+#SBATCH --array=0-\$((num_jobs - 1))  # Array size
 
+# Dynamically load the config file and PSR name
 config="${config}"
 PSR_name="${PSR_name}"
 
@@ -44,18 +45,17 @@ source ~/miniconda3/etc/profile.d/conda.sh
 conda activate VLBI
 
 # Define the starting and ending indices for this job
-start_idx=\$((SLURM_ARRAY_TASK_ID * tasks_per_job + 2))  # Start from second line
+start_idx=\$((SLURM_ARRAY_TASK_ID * tasks_per_job + 2))  # Skip header
 end_idx=\$((start_idx + tasks_per_job - 1))
 
-# Debug: Check the start and end indices
-echo "Processing lines from \$start_idx to \$end_idx"
-
-# Ensure we don't go past the total number of lines
 if [ "\$end_idx" -gt "$n_lines" ]; then
     end_idx=$n_lines
 fi
 
-# Process lines from config file, skipping the header
+# Debug: Check the start and end indices
+echo "Processing lines from \$start_idx to \$end_idx"
+
+# Process lines from config file
 sed -n "\${start_idx},\${end_idx}p" "$config" | while read -r ArrayTaskID RAJ DECJ PX PMRA PMDEC POSEPOCH; do
     output_file="output_${SLURM_ARRAY_JOB_ID}_\${ArrayTaskID}.txt"
     echo "\${PSR_name}, \${ArrayTaskID}, RAJ = \${RAJ}, DECJ = \${DECJ}, PX = \${PX}, PMRA = \${PMRA}, PMDEC = \${PMDEC}, POSEPOCH = \${POSEPOCH}." >> "\$output_file"
