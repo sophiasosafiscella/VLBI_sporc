@@ -111,7 +111,7 @@ def plot_contour(df, best_sol, timing_astrometric_data, tm, x_label, y_label, ax
 
     # Extract the reference timing values
 #    ax.scatter(x=x_timing, y=y_timing, marker='x', c='red', s=400)
-    ax.errorbar(x=x_timing, y=y_timing, xerr=x_timing_error, yerr=y_timing_error, marker='x', c='red')
+#    ax.errorbar(x=x_timing, y=y_timing, xerr=x_timing_error, yerr=y_timing_error, marker='x', c='red')
 
 #    ax.set_title(f'{x_col} vs {y_col} with {w_col} as color')
 
@@ -132,6 +132,7 @@ if __name__ == "__main__":
 
     # Load the posteriors
     result_df = pd.read_pickle(posteriors_file)
+    print(f"Number of solutions = {len(result_df.index)}")
 
     # Convert PX, PMRA, PMDEC to float
     result_df[["PX", "PMRA", "PMDEC", "posterior"]] = result_df[["PX", "PMRA", "PMDEC", "posterior"]].astype(float)
