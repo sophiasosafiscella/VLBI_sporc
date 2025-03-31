@@ -120,7 +120,7 @@ for j, ephem in enumerate(timing_pos['ephem'].unique()):
         Cv[2 * i:2 * (i + 1), 2 * i:2 * (i + 1)] = np.diag([Angle(ra0[psr].std_dev, unit=u.rad).to(u.mas).value**2,
                                                             Angle(dec0[psr].std_dev, unit=u.rad).to(u.mas).value**2])
 
-    # now set up the LSQ dEq = M A + eps, where M = (Dt*D)^-1*Dt
+    # now set up the LSQ dEq = M A + eps, where M = (Dt*D)^-1*Dt*B
     cov_matrix = Ct + Cv                                                                # This agrees with Wang's
     M = np.linalg.multi_dot([np.linalg.inv(np.matmul(D.T, D)), D.T, B])                 # This agrees with Wang's
     data = np.array([(rat_diff[i], dect_diff[i]) for i in range(N_pulsars)]).flatten()  # Data is not the same as Wang's
