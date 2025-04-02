@@ -311,7 +311,7 @@ if __name__ == "__main__":
     print(f"Finding the possible timing solutions for {PSR_name}")
 
     # FIND THE OVERLAP BETWEEN THE TIMING AND V LBI SOLUTIONS
-    solutions = find_solutions(PSR_name, VLBI_astrometric_data, timing_astrometric_data, grid_num=5, plot=False)
+    solutions = find_solutions(PSR_name, VLBI_astrometric_data, timing_astrometric_data, grid_num=7, plot=False)
 
     if solutions:
         overlap_df = pd.DataFrame(data=solutions, columns=["RA", "DEC", "PX", "PM"])
