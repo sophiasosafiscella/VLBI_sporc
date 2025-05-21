@@ -59,6 +59,7 @@ dec_v2 = np.empty(len(dec_v), dtype=uncertainties.core.Variable)
 # Calibrate positions to RFC
 for i, (index, row) in enumerate(cal.iterrows()):
     if row['og_cat'] != "RFC":
+        print("Calibrating " + index + " to RFC")
         ra_v2[i] = to_ufloat(ra_v[i] + dcal_ra[i])     # RA from VLBI in RFC
         dec_v2[i] = to_ufloat(dec_v[i] + dcal_dec[i])  # DEC from VLBI in RFC
     else:
@@ -104,6 +105,9 @@ for j, ephem in enumerate(timing_pos['ephem'].unique()):
     dect_dict = {k: v for k, v in zip(dect_dms.index.tolist(), Angle(dect_dms.values, unit=u.degree).rad)}
     dect_diff = Angle([dect_dict[psr] - dec0[psr].nominal_value for psr in psr_list], unit=u.rad).to(u.mas).value
 
+    print(rat_diff)
+    print(dect_diff)
+
     rat_err = timing_pos.loc[timing_pos['ephem'] == ephem, 'ra_te']
     rat_err = {k: v for k, v in zip(rat_err.index.tolist(), Angle(rat_err.values, unit=u.hourangle).to(u.mas).value)}
 
@@ -134,5 +138,7 @@ for j, ephem in enumerate(timing_pos['ephem'].unique()):
 
     gls_model = sm.GLS(data, M, sigma=cov_matrix).fit()
     print(gls_model.summary())
+#    print([gls_model.params])
+    print(gls_model.cov_params())
 
     pd.DataFrame([gls_model.params], columns=['Ax', 'Ay', 'Az']).to_csv("./data/NG_frame_tie/NG_frame_tie.csv", index=False)

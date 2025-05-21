@@ -8,6 +8,7 @@ from astropy.time import Time
 import pint
 from pandas.core.frame import pandas
 from pint.models.timing_model import TimingModel
+from pypulse.utils import weighted_moments
 from scipy.stats import norm, skewnorm
 from uncertainties import ufloat, umath
 from math import log as ln
@@ -322,3 +323,54 @@ def Wang_frame_tie(VLBI_pos_ICRF_spherical, Omega, astropy):
     else:
         return dict(ra=ufloat(VLBI_pos_SSB_spherical["ra"].nominal_value, VLBI_pos_SSB_spherical["ra"].std_dev),
                     dec=ufloat(VLBI_pos_SSB_spherical["dec"].nominal_value, VLBI_pos_SSB_spherical["dec"].std_dev))
+
+
+def epoch_scrunch(toas, data=None, errors=None, epochs=None, decimals=0, getdict=False, weighted=False, harmonic=False):
+    if epochs is None:
+        epochsize = 10 ** (-decimals)
+        bins = np.arange(np.around(min(toas), decimals=decimals) - epochsize,
+                         np.around(max(toas), decimals=decimals) + 2 * epochsize,
+                         epochsize)  # 2 allows for the extra bin to get chopped by np.histogram
+        freq, bins = np.histogram(toas, bins)
+        validinds = np.where(freq != 0)[0]
+
+        epochs = np.sort(bins[validinds])
+        diffs = np.array(list(map(lambda x: np.around(x, decimals=decimals), np.diff(epochs))))
+        epochs = np.append(epochs[np.where(diffs > epochsize)[0]], [epochs[-1]])
+    else:
+        epochs = np.array(epochs)
+    reducedTOAs = np.array(list(map(lambda toa: epochs[np.argmin(np.abs(epochs - toa))], toas)))
+
+    if data is None:
+        return epochs
+
+    Nepochs = len(epochs)
+
+    if weighted and errors is not None:
+        averaging_func = lambda x, y: weighted_moments(x, 1.0 / y ** 2, unbiased=True, harmonic=harmonic)
+    else:
+        averaging_func = lambda x, y: (np.mean(x), np.std(y))  # is this correct?
+
+    if getdict:
+        retval = dict()
+        retvalerrs = dict()
+    else:
+        retval = np.zeros(Nepochs)
+        retvalerrs = np.zeros(Nepochs)
+    for i in range(Nepochs):
+        epoch = epochs[i]
+        inds = np.where(reducedTOAs == epoch)[0]
+        if getdict:
+            retval[epoch] = data[inds]
+            if errors is not None:
+                retvalerrs[epoch] = errors[inds]
+        else:
+            if errors is None:
+                retval[i] = np.mean(data[inds])  # this is incomplete
+                retvalerrs[i] = np.std(data[inds])  # temporary
+            else:
+                retval[i], retvalerrs[i] = averaging_func(data[inds], errors[inds])
+    #            print data[inds],errors[inds]
+    if getdict and errors is None:  # is this correct?
+        return epochs, retval
+    return epochs, retval, retvalerrs
