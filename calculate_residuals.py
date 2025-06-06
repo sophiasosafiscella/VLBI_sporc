@@ -24,8 +24,8 @@ from VLBI_utils import replace_params
 if __name__ == "__main__":
 
 #    PSR_name: str = "J0030+0451"
-#    PSR_name: str = "J2145-0750"
-    PSR_name: str = "J1640+2224"
+    PSR_name: str = "J2145-0750"
+#    PSR_name: str = "J1640+2224"
     file: str = f"./results/{PSR_name}_new_res_diff.csv"
 
     if os.path.isfile(file):
@@ -88,9 +88,9 @@ if __name__ == "__main__":
     fig, ax = plt.subplots(figsize=(12, 8))
     ax.scatter(epochs, avg_residuals)
 
-    ax.set_title(f"{PSR_name} Difference in Pre-Fit Timing Residuals")
+    ax.set_title(PSR_name)#Difference in Pre-Fit Timing Residuals)
     ax.set_xlabel("MJD")
-    ax.set_ylabel("Residuals Difference ($\mu s$)")
+    ax.set_ylabel("Residuals Difference [$\mathrm{\mu s}$]")
     props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
     ax.text(
         0.98, 0.95,  # X and Y position in *axes coordinates* (0 to 1)

@@ -51,7 +51,7 @@ if __name__ == "__main__":
 #    plt.title(str(PSR_name) + " Original Timing Residuals | $\sigma_\mathrm{TOA}$ = " + str(
 #        round(np.std(original_residuals), 2)))
 #    plt.xlabel("MJD")
-    ax[0].set_ylabel("Residual ($\mu s$)")
+    ax[0].set_ylabel("Residual [$\mathrm{\mu s}$]")
 #    plt.tight_layout()
 #    plt.show()
 
@@ -71,7 +71,7 @@ if __name__ == "__main__":
 #    plt.title(str(PSR_name) + " New Timing Residuals | $\sigma_\mathrm{TOA}$ = " + str(
 #        round(np.std(new_residuals), 2)))
 #    plt.xlabel("MJD")
-    ax[1].set_ylabel("Residual ($\mu s$)")
+    ax[1].set_ylabel("Residual [$\mathrm{\mu s}$]")
 #    plt.tight_layout()
 #    plt.show()
 

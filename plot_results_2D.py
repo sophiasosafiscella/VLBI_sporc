@@ -34,6 +34,18 @@ def find_timing_error_label(label):
     elif label == 'PX':
         return 'px_te'
 
+def label_maker(label):
+    if label == 'RAJ':
+        return '$\\alpha$'
+    elif label == 'DECJ':
+        return '$\\delta$'
+    elif label == 'PMRA':
+        return '$\\mu_\\alpha$'
+    elif label == 'PMDEC':
+        return '$\\mu_\\delta$'
+    elif label == 'PX':
+        return '$\\Pi$'
+
 def plot_contour(df, best_sol, timing_astrometric_data, tm, x_label, y_label, ax, contours):
 
     all_params = ["RAJ", "DECJ", "PX", "PMRA", "PMDEC"]
@@ -75,7 +87,7 @@ def plot_contour(df, best_sol, timing_astrometric_data, tm, x_label, y_label, ax
         x_timing = (timing_RAJ - ref_RAJ).hms[2] * 1000.0
         x_timing_error = Angle(timing_astrometric_data['ra_te'], unit=u.hourangle).hms[2] * 1000.0
         best_sol_x = (Angle(best_sol[x_label], unit=u.hourangle) - ref_RAJ).hms[2] * 1000.0
-        ax.set_xlabel("$\mathrm{RAJ} - " + f"{ref_RAJ:latex}"[1:-1] + " [\mathrm{mas}]$")
+        ax.set_xlabel("$\\alpha- " + f"{ref_RAJ:latex}"[1:-1] + "$\n$[\mathrm{mas}]$")
     elif x_label == 'DECJ':
         timing_DECJ = Angle(timing_astrometric_data['dec_t'], unit=u.degree)
         ref_DECJ = Angle(f"{int(timing_DECJ.dms[0])}d{int(abs(timing_DECJ.dms[1]))}m{round(abs(timing_DECJ.dms[2]), 1)}s")
@@ -83,13 +95,13 @@ def plot_contour(df, best_sol, timing_astrometric_data, tm, x_label, y_label, ax
         x_timing = (timing_DECJ - ref_DECJ).dms[2] * 1000.0
         x_timing_error = Angle(timing_astrometric_data['dec_te'], unit=u.degree).dms[2] * 1000.0
         best_sol_x = (Angle(best_sol[x_label], unit=u.degree) - ref_DECJ).dms[2] * 1000.0
-        ax.set_xlabel("$\mathrm{DECJ} - (" + f"{ref_DECJ:latex}"[1:-1] + ") [\mathrm{mas}]$")
+        ax.set_xlabel("$\delta - (" + f"{ref_DECJ:latex}"[1:-1] + ")$\n$[\mathrm{mas}]$")
     else:
         x = x_values
         x_timing = timing_astrometric_data[find_timing_label(x_label)],
         x_timing_error = timing_astrometric_data[find_timing_error_label(x_label)]
         best_sol_x = best_sol[x_label]
-        ax.set_xlabel(f"{x_label} [{getattr(tm, x_label).units}]")
+        ax.set_xlabel(f"{label_maker(x_label)}\n[{getattr(tm, x_label).units}]")
 
     if y_label == 'RAJ':
         timing_RAJ = Angle(timing_astrometric_data['ra_t'], unit=u.hourangle)
@@ -98,7 +110,7 @@ def plot_contour(df, best_sol, timing_astrometric_data, tm, x_label, y_label, ax
         y_timing = (timing_RAJ - ref_RAJ).hms[2] * 1000.0
         y_timing_error = Angle(timing_astrometric_data['ra_te'], unit=u.hourangle).hms[2] * 1000.0
         best_sol_y = (Angle(best_sol[y_label], unit=u.hourangle) - ref_RAJ).hms[2] * 1000.0
-        ax.set_ylabel("$\mathrm{RAJ} - " + f"{ref_RAJ:latex}"[1:-1] + " [\mathrm{mas}]$")
+        ax.set_ylabel("$\\alpha - " + f"{ref_RAJ:latex}"[1:-1] + "$\n$[\mathrm{mas}]$")
     elif y_label == 'DECJ':
         timing_DECJ = Angle(timing_astrometric_data['dec_t'], unit=u.degree)
         ref_DECJ = Angle(f"{int(timing_DECJ.dms[0])}d{int(abs(timing_DECJ.dms[1]))}m{round(abs(timing_DECJ.dms[2]), 1)}s")
@@ -106,17 +118,17 @@ def plot_contour(df, best_sol, timing_astrometric_data, tm, x_label, y_label, ax
         y_timing = (timing_DECJ - ref_DECJ).dms[2] * 1000.0
         y_timing_error = Angle(timing_astrometric_data['dec_te'], unit=u.degree).dms[2] * 1000.0
         best_sol_y = (Angle(best_sol[y_label], unit=u.degree) - ref_DECJ).dms[2] * 1000.0
-        ax.set_ylabel("$\mathrm{DECJ} - (" + f"{ref_DECJ:latex}"[1:-1] + ") [\mathrm{mas}]$")
+        ax.set_ylabel("$\delta - (" + f"{ref_DECJ:latex}"[1:-1] + ")$\n$[\mathrm{mas}]$")
     else:
         y = y_values
         y_timing = timing_astrometric_data[find_timing_label(y_label)]
         y_timing_error = timing_astrometric_data[find_timing_error_label(y_label)]
         best_sol_y = best_sol[y_label]
-        ax.set_ylabel(f"{y_label} [{getattr(tm, y_label).units}]")
+        ax.set_ylabel(f"{label_maker(y_label)}\n[{getattr(tm, y_label).units}]")
 
 
     # Plot contour
-    contour = ax.contourf(x, y, z_values, cmap="viridis")
+    contour = ax.contourf(x, y, z_values, levels=25, cmap="viridis")
     contours.append(contour)
 #    cbar = plt.colorbar(contour, ax=ax, label='posterior')
 #    cbar.remove()  # Remove it
@@ -125,17 +137,18 @@ def plot_contour(df, best_sol, timing_astrometric_data, tm, x_label, y_label, ax
     ax.axhline(y=best_sol_y, color='k', linestyle='--', linewidth=2.5)
 
     # Extract the reference timing values
-#    ax.scatter(x=x_timing, y=y_timing, marker='x', c='red', s=400)
-#    ax.errorbar(x=x_timing, y=y_timing, xerr=x_timing_error, yerr=y_timing_error, marker='x', c='red')
+    ax.scatter(x=x_timing, y=y_timing, marker='x', c='red', s=400)
+    ax.errorbar(x=x_timing, y=y_timing, xerr=x_timing_error, yerr=y_timing_error, marker='x', c='red')
 
 #    ax.set_title(f'{x_col} vs {y_col} with {w_col} as color')
 
 
 if __name__ == "__main__":
 
-    PSR_name: str = "J1730-2304"
+#    PSR_name: str = "J0030+0451"
+#    PSR_name: str = "J1730-2304"
 #    PSR_name: str = "J1640+2224"
-#    PSR_name: str = "J2145-0750"
+    PSR_name: str = "J2010-1323"
 #    PSR_name: str = "J2145-0750"
     posteriors_file: str = f"./results/timing_posteriors_frame_tie/{PSR_name}_consolidated_timing_posteriors.pkl"
 
@@ -146,6 +159,7 @@ if __name__ == "__main__":
 
     # Load the timing solution
     timing_astrometric_data = pd.read_csv("./data/timing_astrometric_data_updated.csv", index_col=0, header=0).loc[PSR_name]
+    print(timing_astrometric_data)
 
     # Load the posteriors
     result_df = pd.read_pickle(posteriors_file)
@@ -157,13 +171,14 @@ if __name__ == "__main__":
     # Find the solution with the highest posterior
     best_sol_idx = result_df['posterior'].idxmax()
     best_sol = result_df.loc[best_sol_idx].to_dict()
+    print(best_sol)
 
     # Create subplots
     sns.set_context('paper')
     sns.set_style('ticks')
-    sns.set(font_scale=3)
-    fig, axs = plt.subplots(4, 4, figsize=(36, 30))
-    fig.suptitle(PSR_name)
+    sns.set(font_scale=5.0)
+    fig, axs = plt.subplots(4, 4, figsize=(36, 30), gridspec_kw = {'wspace':0.1, 'hspace':0.1})
+#    fig.suptitle(PSR_name)
 
     # Store contour plots for color normalization
     contours = []
@@ -205,12 +220,10 @@ if __name__ == "__main__":
         for ax in axs[row, :]:
             ax.set_ylim(y_min, y_max)
 
-    # Select the lowest right-most plot in the lower triangle
-    cbar_ax = axs[2, 3]
-
     # Create a single colorbar using the first contour instance
-    fig.colorbar(contours[0], ax=cbar_ax, orientation="vertical")
+    cax = fig.add_axes([0.75, 0.4, 0.02, 0.4])
+    fig.colorbar(contours[0], cax=cax)
 
-    plt.tight_layout()
-    plt.savefig("./figures/corner_plot_" + PSR_name + ".pdf")
+#    plt.tight_layout()
+    plt.savefig("./figures/corner_plot_" + PSR_name + "_paper.pdf")
     plt.show()

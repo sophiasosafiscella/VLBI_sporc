@@ -34,7 +34,8 @@ dcal_dec_dict = {k:v for k, v in zip(cal_psr_list, dcal_dec)}
 #---------------------------------------------------------------
 # Read in the pulsar VLBI positions in their original catalogues
 #---------------------------------------------------------------
-vlbi_pos = pd.read_table('./data/original_vlbi_astrometric_data.csv', header=0, index_col=0, sep=',', comment='#')
+vlbi_pos = pd.read_table('./data/NG_frame_tie/NG_msp_vlbi.csv', header=0, index_col=0, sep=',', comment='#')
+#vlbi_pos = pd.read_table('./data/original_vlbi_astrometric_data.csv', header=0, index_col=0, sep=',', comment='#')
 NG_psr_list = vlbi_pos.index.tolist()
 
 ra_v = uarray(Angle(vlbi_pos["ra_v"], unit=u.hourangle).rad, Angle(vlbi_pos["ra_ve"], unit=u.hourangle).rad)  # RA from VLBI
@@ -61,5 +62,5 @@ for psr_name, row in vlbi_pos.iterrows():
         vlbi_pos.loc[psr_name,'ra_ve'] = Angle(sqrt(Angle(row['ra_ve'], unit=u.hourangle).rad**2 + rfc_cal_ra_dict[psr_name].std_dev**2 + Angle(0.8 * u.mas).rad**2), unit=u.rad).to_string(unit=u.hourangle)
         vlbi_pos.loc[psr_name,'dec_ve'] = Angle(sqrt(Angle(row['ra_ve'], unit=u.deg).rad**2 + rfc_cal_dec_dict[psr_name].std_dev**2), unit=u.rad).to_string(unit=u.deg)
 
-vlbi_pos.to_csv('./data/calibrated_vlbi_astrometric_data.csv')
+vlbi_pos.to_csv('./data/new_calibrated_vlbi_astrometric_data.csv')
 

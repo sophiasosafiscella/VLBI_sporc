@@ -141,4 +141,4 @@ for j, ephem in enumerate(timing_pos['ephem'].unique()):
 #    print([gls_model.params])
     print(gls_model.cov_params())
 
-    pd.DataFrame([gls_model.params], columns=['Ax', 'Ay', 'Az']).to_csv("./data/NG_frame_tie/NG_frame_tie.csv", index=False)
+#    pd.DataFrame([gls_model.params], columns=['Ax', 'Ay', 'Az']).to_csv("./data/NG_frame_tie/NG_frame_tie.csv", index=False)

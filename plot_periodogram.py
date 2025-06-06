@@ -14,8 +14,8 @@ import sys
 if __name__ == "__main__":
 
 #    PSR_name: str = "J0030+0451"
-#    PSR_name: str = "J2145-0750"
-    PSR_name: str = "J1640+2224"
+    PSR_name: str = "J2145-0750"
+#    PSR_name: str = "J1640+2224"
 
     file: str = f"./results/{PSR_name}_new_res_diff.csv"
 
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     axs[0].set_xscale('log')
     axs[0].set_xticklabels([])
 #    ax.set_yscale('log')
-    axs[0].set_ylabel('Power')
+    axs[0].set_ylabel('Power [$\mathrm{\mu s^2}$/day]')
     axs[0].grid()
     axs[0].legend(loc='upper left')
 
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     axs[1].set_xscale('log')
     axs[1].set_yscale('log')
     axs[1].set_xlabel('Frequency [1/day]')
-    axs[1].set_ylabel('Log(Power)')
+    axs[1].set_ylabel('Log(Power) [$\mathrm{\mu s^2}$/day]')
     axs[1].grid()
 
 
