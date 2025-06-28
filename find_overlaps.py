@@ -99,10 +99,10 @@ def plot_overlap(param, overlap, timing, VLBI, fig, row, col):
 
 
 def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: int = 10, plot=False):
-    VLBI_color = "rgba(0, 204, 150, 0.5)"  # px.colors.qualitative.Pastel1[2]
-    timing_color = "rgba(99, 110, 250, 0.5)"  # px.colors.qualitative.Pastel1[1]
+    VLBI_color = (0 / 255, 204 / 255, 150 / 255, 0.5)  # equivalent to rgba(0, 204, 150, 0.5)
+    timing_color = (99 / 255, 110 / 255, 250 / 255, 0.5)  # equivalent to rgba(99, 110, 250, 0.5)
 
-#    fig = make_subplots(rows=1, cols=4)
+    #    fig = make_subplots(rows=1, cols=4)
 
     # ------------------------------RAJ------------------------------
     timing_RAJ = ufloat(Angle(timing_data.loc[PSR_name, "ra_t"]).rad, Angle(timing_data.loc[PSR_name, "ra_te"]).rad)
@@ -256,8 +256,9 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
                                                        factor, grid_num)
 
     if RAJ_overlap and DECJ_overlap and plot:
-        fig = go.Figure()
-        sns.set_theme(context="paper", style="dark", font_scale=1.5)
+#        fig = go.Figure()
+        fig, ax = plt.subplots(1, 1, figsize=(7, 5))
+        sns.set_theme(context="paper", style="ticks", font_scale=2)
 
         PX_values, PX_pdf = pdf_values(x0=timing_PX.nominal_value, uL=timing_PX.std_dev, uR=timing_PX.std_dev, factor=factor, num=grid_num)
 
@@ -265,20 +266,40 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
         VLBI_PX_uL: float = VLBI_data.loc[PSR_name, "px_v_uL"]
         VLBI_PX_uR: float = VLBI_data.loc[PSR_name, "px_v_uR"]
 
-        fig.add_trace(
-            go.Scatter(x=PX_values, y=PX_pdf, name="Timing", fill='tozeroy', fillcolor=timing_color, mode='none'))
-        fig.add_vline(x=timing_PX.nominal_value - 2 * timing_PX.std_dev, line_width=3, line_dash="dash", line_color="blue")
-        fig.add_vline(x=timing_PX.nominal_value + 2 * timing_PX.std_dev, line_width=3, line_dash="dash", line_color="blue")
+#        ax.fill_between(x=PX_values, y=PX_pdf, name="Timing", fill='tozeroy', fillcolor=timing_color, mode='none'))
+        ax.plot(PX_values, PX_pdf, color=timing_color, zorder=10)
+        ax.fill_between(PX_values, PX_pdf, color=timing_color, zorder=10, label="Timing")
+        ax.axvline(x=timing_PX.nominal_value - 3 * timing_PX.std_dev, lw=3, ls='--', alpha=1, c=timing_color)
+        ax.axvline(x=timing_PX.nominal_value + 3 * timing_PX.std_dev, lw=3, ls='--', alpha=1, c=timing_color)
+        ax.text(0.06, 0.6, "$\\varpi^\mathrm{t} \pm 3\sigma_{\\varpi^\mathrm{t}}$", transform=ax.transAxes, fontsize=18,
+        verticalalignment='top', c=timing_color, alpha=1)
 
         x, y = pdf_values(x0=VLBI_PX_x0, uL=VLBI_PX_uL, uR=VLBI_PX_uR, factor=factor, num=grid_num)
-        fig.add_trace(go.Scatter(x=x, y=y, name="VLBI", fill='tozeroy', fillcolor=VLBI_color, mode='none'))
-        fig.add_vline(x=VLBI_PX_x0 - factor * VLBI_PX_uL, line_width=3, line_dash="dash", line_color="green")
-        fig.add_vline(x=VLBI_PX_x0 + factor * VLBI_PX_uR, line_width=3, line_dash="dash", line_color="green")
+#        fig.add_trace(go.Scatter(x=x, y=y, name="VLBI", fill='tozeroy', fillcolor=VLBI_color, mode='none'))
+        ax.plot(x, y, color=VLBI_color, zorder=10)
+        ax.fill_between(x, y, color=VLBI_color, zorder=10, label="VLBI")
+        ax.axvline(x=VLBI_PX_x0 - factor * VLBI_PX_uL, lw=3, ls='--', alpha=1, c=VLBI_color)
+        ax.axvline(x=VLBI_PX_x0 + factor * VLBI_PX_uR, lw=3, ls='--', alpha=1, c=VLBI_color)
+        ax.text(0.69, 0.4, "$\\varpi^\mathrm{VLBI} + 3u_\mathrm{R}$", transform=ax.transAxes, fontsize=18,
+        verticalalignment='top', c=VLBI_color, alpha=1)
+        ax.text(0.23, 0.4, "$\\varpi^\mathrm{VLBI} - 3u_\mathrm{L}$", transform=ax.transAxes, fontsize=18,
+        verticalalignment='top', c=VLBI_color, alpha=1)
 
-        fig.update_xaxes(title_text="$\Pi [\mathrm{mas}]$")
-        fig.write_image(f"./results/frame_tie/{PSR_name[0:5]}_PX.png")
+        # Overlap
+        ax.axvspan(VLBI_PX_x0 - factor * VLBI_PX_uL, VLBI_PX_x0 + factor * VLBI_PX_uR, facecolor='none', edgecolor='gray', hatch='//', linewidth=0.0, zorder=0, label="Overlap")
+
+        from matplotlib.patches import Patch
+        hatch_patch = Patch(facecolor='none', edgecolor='gray', hatch='//', label='Overlap region')
+        ax.legend(handles=[hatch_patch])
+
+
+        ax.set_xlabel("$\\varpi [\mathrm{mas}]$")
+        ax.set_ylim([0, ax.get_ylim()[-1]])
+        plt.legend()
+        plt.grid(zorder=0)
+        plt.tight_layout()
+        fig.savefig(f"./results/frame_tie/{PSR_name[0:5]}_PX.pdf", bbox_inches='tight')
         fig.show()
-
     # ------------------------------Find the overlap------------------------------
 
     if RAJ_overlap and DECJ_overlap and PM_overlap and PX_overlap:
@@ -301,7 +322,8 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
 
 if __name__ == "__main__":
 
-    PSR_name: str = sys.argv[1]
+#    PSR_name: str = sys.argv[1]
+    PSR_name: str = "J2145-0750"
 
     # File containing the timing and VLBI astrometric VLBI_data
     VLBI_astrometric_data = pd.read_csv("./data/frame_tied_vlbi_astrometric_data.csv", index_col=0, header=0)
@@ -311,7 +333,7 @@ if __name__ == "__main__":
     print(f"Finding the possible timing solutions for {PSR_name}")
 
     # FIND THE OVERLAP BETWEEN THE TIMING AND V LBI SOLUTIONS
-    solutions = find_solutions(PSR_name, VLBI_astrometric_data, timing_astrometric_data, grid_num=10, plot=False)
+    solutions = find_solutions(PSR_name, VLBI_astrometric_data, timing_astrometric_data, grid_num=10, plot=True)
 
     if solutions:
         overlap_df = pd.DataFrame(data=solutions, columns=["RA", "DEC", "PX", "PM"])
@@ -319,4 +341,4 @@ if __name__ == "__main__":
         overlap_df = overlap_df.drop(columns=['PM'])
         overlap_df['POSEPOCH'] = timing_astrometric_data.loc[PSR_name, "epoch_t"]
 #            overlap_df.to_pickle(f"./results/frame_tie/{PSR_name}_overlap_frame_tie.pkl")
-        overlap_df.to_csv(f"./results/frame_tie/{PSR_name}_overlap_frame_tie.txt", sep=" ", header=True, index_label="ArrayTaskID")
+#        overlap_df.to_csv(f"./results/frame_tie/{PSR_name}_overlap_frame_tie.txt", sep=" ", header=True, index_label="ArrayTaskID")

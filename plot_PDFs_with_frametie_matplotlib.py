@@ -12,22 +12,23 @@ from VLBI_utils import pdf_values, Wang_frame_tie
 from uncertainties import ufloat, umath
 import sys
 
-VLBI_data = pd.read_csv("./data/calibrated_vlbi_astrometric_data.csv", header=0, index_col=0)
+#VLBI_data = pd.read_csv("./data/calibrated_vlbi_astrometric_data.csv", header=0, index_col=0)
+VLBI_data = pd.read_csv("./data/frame_tied_vlbi_astrometric_data.csv", header=0, index_col=0)
 timing_data = pd.read_csv("./data/timing_astrometric_data_updated.csv", header=0, index_col=0)
-PSR_list = VLBI_data.index
-sns.set(context="paper", style="darkgrid", font_scale=1.9)
+#PSR_list = VLBI_data.index
+PSR_list = ["J0030+0451", "J1640+2224", "J1730-2304", "J2010-1323", "J2145-0750", "J2317+1439"]
+sns.set(context="paper", style="darkgrid", font_scale=2.5)
 sns.set_palette(plotly.colors.qualitative.Plotly)
 # Set Plotly-style background color
 plotly_bg = "#e5ecf6"
+ncols: int = 5
 
-fig, axs = plt.subplots(nrows=8, ncols=6, figsize=(18,24), constrained_layout=True)
+fig, axs = plt.subplots(nrows=len(PSR_list), ncols=ncols, figsize=(18,24), constrained_layout=True)
 
 VLBI_color = (0/255, 204/255, 150/255, 0.5)   # teal-like green with alpha
 timing_color = (99/255, 110/255, 250/255, 0.5) # bluish with alpha
 
-#VLBI_data = pd.read_csv("./data/frame_tied_vlbi_astrometric_data.csv", header=0, index_col=0)
-
-for i, PSR in enumerate(PSR_list[9:]):
+for i, PSR in enumerate(PSR_list):
 
     # ----------------------------------------------------------------------------------------------
     # VLBI frame tie for position
@@ -104,7 +105,10 @@ for i, PSR in enumerate(PSR_list[9:]):
     x_timing_DEJC, y_timing_DECJ = pdf_values(x0=timing_deltaDECJ_ms, uL=timing_DECJ_err_ms, uR=timing_DECJ_err_ms)
 
     axs[i, 1].fill_between(x_timing_DEJC, y_timing_DECJ, color=timing_color, linewidth=0, label=None)
-    axs[i, 1].set_xlabel("$\delta -$ (" + f"${ref_DECJ:latex}$"[1:-1] + ")" + "\n" + "$[\mathrm{mas}]$")
+    if ref_DECJ.dms[0] > 0:
+        axs[i, 1].set_xlabel("$\delta - " + f"{ref_DECJ:latex}"[1:-1] + "$\n$[\mathrm{mas}]$")
+    else:
+        axs[i, 1].set_xlabel("$\delta + " + f"{ref_DECJ:latex}"[2:-1] + "$\n$[\mathrm{mas}]$")
 
     # ------------------------------Parallax------------------------------
     # VLBI
@@ -116,7 +120,7 @@ for i, PSR in enumerate(PSR_list[9:]):
                       uR=timing_data.loc[PSR, "px_te"])
 
     axs[i, 2].fill_between(x_timing_PX, y_timing_PX, color=timing_color, linewidth=0, label=None)
-    axs[i, 2].set_xlabel("$\Pi [\mathrm{mas}]$")
+    axs[i, 2].set_xlabel("$\\varpi [\mathrm{mas}]$")
 
     # ------------------------------Proper Motion------------------------------
     # For VLBI, sometimes the error bars are asymmetric. In order to propagate errors, we will do this twice, each time
@@ -135,7 +139,7 @@ for i, PSR in enumerate(PSR_list[9:]):
             VLBI_PM_uR = VLBI_PM.std_dev
 
     x_VLBI_PM, y_VLBI_PM = pdf_values(x0=VLBI_PM.nominal_value, uL=VLBI_PM_uL, uR=VLBI_PM_uR)
-    axs[i, 3].fill_between(x_VLBI_PM, y_VLBI_PM, color=VLBI_color, linewidth=0, label=None)
+#    axs[i, 3].fill_between(x_VLBI_PM, y_VLBI_PM, color=VLBI_color, linewidth=0, label=None)
 
     # Timing
     timing_PMRA = ufloat(timing_data.loc[PSR, "pmra_t"], timing_data.loc[PSR, "pmra_te"])
@@ -146,34 +150,34 @@ for i, PSR in enumerate(PSR_list[9:]):
     timing_PM = umath.sqrt(timing_PMDEC ** 2 + timing_PMRA ** 2)
 
     x_timing_PM, y_timing_PM = pdf_values(x0=timing_PM.nominal_value, uL=timing_PM.std_dev, uR=timing_PM.std_dev)
-    axs[i, 3].fill_between(x_timing_PM, y_timing_PM, color=timing_color, linewidth=0, label=None)
-    axs[i, 3].set_xlabel("$\mu~[\mathrm{mas~yr^{-1}}]$")
+#    axs[i, 3].fill_between(x_timing_PM, y_timing_PM, color=timing_color, linewidth=0, label=None)
+#    axs[i, 3].set_xlabel("$\mu~[\mathrm{mas~yr^{-1}}]$")
 
     # ------------------------------PMRA------------------------------
     # VLBI
     x_VLBI_PMRA, y_VLBI_PMRA = pdf_values(x0=VLBI_PM_SSB['PMRA'], uL=VLBI_PM_SSB_err['PMRA_uL'], uR=VLBI_PM_SSB_err['PMRA_uR'])
-    axs[i, 4].fill_between(x_VLBI_PMRA, y_VLBI_PMRA, color=VLBI_color, linewidth=0, label=None)
+    axs[i, 3].fill_between(x_VLBI_PMRA, y_VLBI_PMRA, color=VLBI_color, linewidth=0, label=None)
 
     # Timing
     x_timing_PMRA, y_timing_PMRA = pdf_values(x0=timing_PMRA.nominal_value, uL=timing_PMRA.std_dev, uR=timing_PMRA.std_dev)
-    axs[i, 4].fill_between(x_timing_PMRA, y_timing_PMRA, color=timing_color, linewidth=0, label=None)
-    axs[i, 4].set_xlabel("$\mu_{\mathrm{RA}}~[\mathrm{mas~yr^{-1}}]$")
+    axs[i, 3].fill_between(x_timing_PMRA, y_timing_PMRA, color=timing_color, linewidth=0, label=None)
+    axs[i, 3].set_xlabel("$\mu_{\mathrm{RA}}~[\mathrm{mas~yr^{-1}}]$")
     # ------------------------------PMDEC------------------------------
     # VLBI
     x_VLBI_PMDEC, y_VLBI_PMDEC = pdf_values(x0=VLBI_PM_SSB['PMDEC'], uL=VLBI_PM_SSB_err['PMDEC_uL'], uR=VLBI_PM_SSB_err['PMDEC_uR'])
-    axs[i, 5].fill_between(x_VLBI_PMDEC, y_VLBI_PMDEC, color=VLBI_color, linewidth=0, label=None)
+    axs[i, 4].fill_between(x_VLBI_PMDEC, y_VLBI_PMDEC, color=VLBI_color, linewidth=0, label=None)
 
     # Timing
     x_timing_PMDEC, y_timing_PMDEC = pdf_values(x0=timing_PMDEC.nominal_value, uL=timing_PMDEC.std_dev, uR=timing_PMDEC.std_dev)
-    axs[i, 5].fill_between(x_timing_PMDEC, y_timing_PMDEC, color=timing_color, linewidth=0, label=None)
-    axs[i, 5].set_xlabel("$\mu_{\mathrm{DEC}}~[\mathrm{mas~yr^{-1}}]$")
+    axs[i, 4].fill_between(x_timing_PMDEC, y_timing_PMDEC, color=timing_color, linewidth=0, label=None)
+    axs[i, 4].set_xlabel("$\mu_{\mathrm{DEC}}~[\mathrm{mas~yr^{-1}}]$")
 
     axs[i, 0].set_ylabel(PSR)
 
-    for j in range(6):
+    for j in range(ncols):
         axs[i, j].set_facecolor(plotly_bg)
         axs[i, j].xaxis.set_major_locator(MaxNLocator(prune='both', nbins='auto'))
 
 #fig.tight_layout()
-fig.savefig(f"./figures/PDFs_no_frametie_matplotlib_paper.pdf")
+fig.savefig(f"./figures/PDFs_frametie_matplotlib_paper.pdf")
 fig.show()
