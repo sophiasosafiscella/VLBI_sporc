@@ -333,7 +333,7 @@ if __name__ == "__main__":
     print(f"Finding the possible timing solutions for {PSR_name}")
 
     # FIND THE OVERLAP BETWEEN THE TIMING AND V LBI SOLUTIONS
-    solutions = find_solutions(PSR_name, VLBI_astrometric_data, timing_astrometric_data, grid_num=10, plot=True)
+    solutions = find_solutions(PSR_name, VLBI_astrometric_data, timing_astrometric_data, grid_num=10, plot=False)
 
     if solutions:
         overlap_df = pd.DataFrame(data=solutions, columns=["RA", "DEC", "PX", "PM"])
@@ -341,4 +341,4 @@ if __name__ == "__main__":
         overlap_df = overlap_df.drop(columns=['PM'])
         overlap_df['POSEPOCH'] = timing_astrometric_data.loc[PSR_name, "epoch_t"]
 #            overlap_df.to_pickle(f"./results/frame_tie/{PSR_name}_overlap_frame_tie.pkl")
-#        overlap_df.to_csv(f"./results/frame_tie/{PSR_name}_overlap_frame_tie.txt", sep=" ", header=True, index_label="ArrayTaskID")
+        overlap_df.to_csv(f"./results/frame_tie/{PSR_name}_overlap_frame_tie.txt", sep=" ", header=True, index_label="ArrayTaskID")
