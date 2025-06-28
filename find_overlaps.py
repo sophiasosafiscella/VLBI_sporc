@@ -322,8 +322,8 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
 
 if __name__ == "__main__":
 
-#    PSR_name: str = sys.argv[1]
-    PSR_name: str = "J2145-0750"
+    PSR_name: str = sys.argv[1]
+#    PSR_name: str = "J2145-0750"
 
     # File containing the timing and VLBI astrometric VLBI_data
     VLBI_astrometric_data = pd.read_csv("./data/frame_tied_vlbi_astrometric_data.csv", index_col=0, header=0)
