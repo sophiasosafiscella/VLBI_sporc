@@ -133,26 +133,26 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
             final_fit_resids = final_fit.resids
             print("New model fitting done.")
 
-            # Get the new residuals
-            new_res_avg_dict = final_fit.resids.ecorr_average(use_noise_model=True)
-            new_res_avg = new_res_avg_dict['time_resids'].to(u.us).value
-            new_res_avg_errs = new_res_avg_dict['errors'].to(u.us).value
-            new_res_avg_mjds = new_res_avg_dict['mjds'].value
-
-            # Average the observations at different frequencies within each time window
-            new_res_epochs, new_res_avg_residuals, maxpost_avg_errors = epoch_scrunch(new_res_avg_mjds,
-                                                                                      data=new_res_avg,
-                                                                                      errors=new_res_avg_errs,
-                                                                                      weighted=True)
-
-            new_res = unumpy.uarray(new_res_avg_residuals, maxpost_avg_errors)
-
-            # Take the difference in the residuals
-            res_diff = ng15_res - new_res
-
         except:
             print("Fitting new timing solution failed")
             return final_fit.resids.lnlikelihood()
+
+        # Get the new residuals
+        new_res_avg_dict = final_fit.resids.ecorr_average(use_noise_model=True)
+        new_res_avg = new_res_avg_dict['time_resids'].to(u.us).value
+        new_res_avg_errs = new_res_avg_dict['errors'].to(u.us).value
+        new_res_avg_mjds = new_res_avg_dict['mjds'].value
+
+        # Average the observations at different frequencies within each time window
+        new_res_epochs, new_res_avg_residuals, maxpost_avg_errors = epoch_scrunch(new_res_avg_mjds,
+                                                                                  data=new_res_avg,
+                                                                                  errors=new_res_avg_errs,
+                                                                                  weighted=True)
+
+        new_res = unumpy.uarray(new_res_avg_residuals, maxpost_avg_errors)
+
+        # Take the difference in the residuals
+        res_diff = ng15_res - new_res
 
 
     #            return [[0.0]]
@@ -214,7 +214,7 @@ if __name__ == "__main__":
     parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}_PINT*par")[0]
 
     # Calculate the posterior
-    posterior, residuals_diff = calculate_post(PSR_name, timing_solution, timfile, parfile, VLBI_astrometric_data_file, resume=False, plot=False)
+    posterior, residuals_diff = calculate_post(PSR_name, timing_solution, timfile, parfile, VLBI_astrometric_data_file, resume=True, plot=False)
     print("Posterior calculated. Now saving it...")
 
     # Save the timing solution with its posterior
