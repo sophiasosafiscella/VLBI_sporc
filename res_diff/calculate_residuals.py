@@ -48,8 +48,6 @@ if __name__ == "__main__":
     ng15_epochs, ng15_avg_residuals, ng_15_avg_errors = epoch_scrunch(avg_mjds, data=res_avg, errors=res_avg_errs, weighted=True)
 
     ng15_res = unumpy.uarray(ng15_avg_residuals, ng_15_avg_errors)
-#    ng15_res = unumpy.uarray(res_avg, res_avg_errs)
-
 
     # Load the posteriors
     posteriors_file: str = f"../results/timing_posteriors_frame_tie/{PSR_name}_consolidated_timing_posteriors.pkl"
@@ -63,12 +61,9 @@ if __name__ == "__main__":
     best_sol = result_df.loc[best_sol_idx]
 
     # Replace the old astrometric values with the maximum posterior ones
-    print(getattr(eq_timing_model, 'PMRA').value)
     replace_params(eq_timing_model, best_sol)
-    print(getattr(eq_timing_model, 'PMRA').value)
-#    getattr(eq_timing_model, 'PMRA').value = 200.10
-#    print(getattr(eq_timing_model, 'PMRA').value)
 
+    # Find the residuals with the new timing solution
     maxpost_fitter_object = pint.fitter.DownhillGLSFitter(toas, eq_timing_model)
     maxpost_avg_dict = maxpost_fitter_object.resids.ecorr_average(use_noise_model=True)
     maxpost_res_avg = maxpost_avg_dict['time_resids'].to(u.us).value

@@ -16,8 +16,9 @@ from pint_pal import noise_utils
 
 import astropy.units as u
 from astropy.time import Time
+from uncertainties import unumpy
 
-from VLBI_utils import calculate_lnprior, replace_params
+from VLBI_utils import calculate_lnprior, replace_params, epoch_scrunch
 import glob
 import sys
 
@@ -40,6 +41,20 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 
     # Load the TOAs
     toas = get_TOAs(timfile, planets=True, ephem=eq_timing_model.EPHEM.value)
+
+    # Calculate the original NANOGrav residuals (with the original timing model)
+    # ECORR average
+    fitter_object = pint.fitter.DownhillGLSFitter(toas, ec_timing_model)
+    avg_dict = fitter_object.resids.ecorr_average(use_noise_model=True)
+    res_avg = avg_dict['time_resids'].to(u.us).value
+    res_avg_errs = avg_dict['errors'].to(u.us).value
+    avg_mjds = avg_dict['mjds'].value
+
+    # Average the observations at different frequencies within each time window
+    ng15_epochs, ng15_avg_residuals, ng_15_avg_errors = epoch_scrunch(avg_mjds, data=res_avg, errors=res_avg_errs,
+                                                                      weighted=True)
+
+    ng15_res = unumpy.uarray(ng15_avg_residuals, ng_15_avg_errors)
 
     # Plot the original timing residuals
     if plot:
@@ -117,9 +132,28 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
             final_fit_model.write_parfile(new_par_file)  # Save the new .par fil
             final_fit_resids = final_fit.resids
             print("New model fitting done.")
+
+            # Get the new residuals
+            new_res_avg_dict = final_fit.resids.ecorr_average(use_noise_model=True)
+            new_res_avg = new_res_avg_dict['time_resids'].to(u.us).value
+            new_res_avg_errs = new_res_avg_dict['errors'].to(u.us).value
+            new_res_avg_mjds = new_res_avg_dict['mjds'].value
+
+            # Average the observations at different frequencies within each time window
+            new_res_epochs, new_res_avg_residuals, maxpost_avg_errors = epoch_scrunch(new_res_avg_mjds,
+                                                                                      data=new_res_avg,
+                                                                                      errors=new_res_avg_errs,
+                                                                                      weighted=True)
+
+            new_res = unumpy.uarray(new_res_avg_residuals, maxpost_avg_errors)
+
+            # Take the difference in the residuals
+            res_diff = ng15_res - new_res
+
         except:
             print("Fitting new timing solution failed")
             return final_fit.resids.lnlikelihood()
+
 
     #            return [[0.0]]
 #        except LinAlgError:
@@ -153,7 +187,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
         plt.savefig("./results/new_fits/" + PSR_name + "/" + str(timing_solution.Index) + "_post.png")
         plt.show()
 
-    return posterior
+    return posterior, res_diff
 
 
 if __name__ == "__main__":
@@ -180,10 +214,11 @@ if __name__ == "__main__":
     parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}_PINT*par")[0]
 
     # Calculate the posterior
-    posterior = calculate_post(PSR_name, timing_solution, timfile, parfile, VLBI_astrometric_data_file, resume=False, plot=False)
+    posterior, residuals_diff = calculate_post(PSR_name, timing_solution, timfile, parfile, VLBI_astrometric_data_file, resume=False, plot=False)
     print("Posterior calculated. Now saving it...")
 
     # Save the timing solution with its posterior
-    res_np = np.asarray([idx, POSEPOCH, RAJ, DECJ, PX, PMRA, PMDEC, posterior])
-    np.save(posteriors_dir + "/" + str(idx) + "_posterior.npy", res_np)
+    results_np = np.asarray([idx, POSEPOCH, RAJ, DECJ, PX, PMRA, PMDEC, posterior])
+    np.save(posteriors_dir + "/" + str(idx) + "_posterior.npy", results_np)
+    np.save(posteriors_dir + "/" + str(idx) + "_residuals_diff.npy", residuals_diff)
     print("Posterior saved. End of calculate_posterior.py")
