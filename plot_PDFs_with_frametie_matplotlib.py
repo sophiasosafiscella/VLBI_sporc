@@ -17,13 +17,16 @@ VLBI_data = pd.read_csv("./data/frame_tied_vlbi_astrometric_data.csv", header=0,
 timing_data = pd.read_csv("./data/timing_astrometric_data_updated.csv", header=0, index_col=0)
 #PSR_list = VLBI_data.index
 PSR_list = ["J0030+0451", "J1640+2224", "J1730-2304", "J2010-1323", "J2145-0750", "J2317+1439"]
-sns.set(context="paper", style="darkgrid", font_scale=2.5)
+sns.set(context="paper", style="ticks", font_scale=3)
 sns.set_palette(plotly.colors.qualitative.Plotly)
 # Set Plotly-style background color
 plotly_bg = "#e5ecf6"
 ncols: int = 5
 
-fig, axs = plt.subplots(nrows=len(PSR_list), ncols=ncols, figsize=(18,24), constrained_layout=True)
+fig, axs = plt.subplots(
+    nrows=len(PSR_list), ncols=ncols, figsize=(18, 28),
+    gridspec_kw={'wspace': 0, 'hspace': 0.6}
+)
 
 VLBI_color = (0/255, 204/255, 150/255, 0.5)   # teal-like green with alpha
 timing_color = (99/255, 110/255, 250/255, 0.5) # bluish with alpha
@@ -175,9 +178,16 @@ for i, PSR in enumerate(PSR_list):
     axs[i, 0].set_ylabel(PSR)
 
     for j in range(ncols):
-        axs[i, j].set_facecolor(plotly_bg)
+        #axs[i, j].set_facecolor(plotly_bg)
         axs[i, j].xaxis.set_major_locator(MaxNLocator(prune='both', nbins='auto'))
+        axs[i, j].tick_params(left=False)  # remove the ticks
+        axs[i, j].set(yticklabels=[])
 
-#fig.tight_layout()
+plt.subplots_adjust(
+    left=0.05, right=0.98,
+    top=0.98, bottom=0.05,
+    wspace=0, hspace=0.05
+)
+
 fig.savefig(f"./figures/PDFs_frametie_matplotlib_paper.pdf")
 fig.show()

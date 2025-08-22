@@ -175,17 +175,18 @@ def plot_contour(df, best_sol, timing_astrometric_data, tm, x_label, y_label, ax
 
     if x_label == 'RAJ':
         timing_RAJ = Angle(timing_astrometric_data['ra_t'], unit=u.hourangle)
-        ref_RAJ = Angle(f"{int(timing_RAJ.hms[0])}h{int(timing_RAJ.hms[1])}m{round(timing_RAJ.hms[2], 1)}s")
+        ref_RAJ = Angle(f"{int(timing_RAJ.hms[0])}h{int(timing_RAJ.hms[1])}m{round(timing_RAJ.hms[2], 4)}s")
         x = (Angle(x_values, unit=u.hourangle) - ref_RAJ).hms[2] * 1000.0
         x_timing = (timing_RAJ - ref_RAJ).hms[2] * 1000.0
         x_timing_error = Angle(timing_astrometric_data['ra_te'], unit=u.hourangle).hms[2] * 1000.0
         best_sol_x = (Angle(best_sol[x_label], unit=u.hourangle) - ref_RAJ).hms[2] * 1000.0
         ax.set_xlabel("$\\alpha- " + f"{ref_RAJ:latex}"[1:-1] + "$\n$[\mathrm{mas}]$")
         ax.xaxis.set_major_formatter(ticker.StrMethodFormatter("{x:.3f}"))
+        ax.set_xticks([-0.003, 0.0, 0.003])
     elif x_label == 'DECJ':
         timing_DECJ = Angle(timing_astrometric_data['dec_t'], unit=u.degree)
         ref_DECJ = Angle(
-            f"{int(timing_DECJ.dms[0])}d{int(abs(timing_DECJ.dms[1]))}m{round(abs(timing_DECJ.dms[2]), 1)}s")
+            f"{int(timing_DECJ.dms[0])}d{int(abs(timing_DECJ.dms[1]))}m{round(abs(timing_DECJ.dms[2]), 3)}s")
         x = (Angle(x_values, unit=u.degree) - ref_DECJ).dms[2] * 1000.0
         x_timing = (timing_DECJ - ref_DECJ).dms[2] * 1000.0
         x_timing_error = Angle(timing_astrometric_data['dec_te'], unit=u.degree).dms[2] * 1000.0
@@ -212,7 +213,7 @@ def plot_contour(df, best_sol, timing_astrometric_data, tm, x_label, y_label, ax
     elif y_label == 'DECJ':
         timing_DECJ = Angle(timing_astrometric_data['dec_t'], unit=u.degree)
         ref_DECJ = Angle(
-            f"{int(timing_DECJ.dms[0])}d{int(abs(timing_DECJ.dms[1]))}m{round(abs(timing_DECJ.dms[2]), 1)}s")
+            f"{int(timing_DECJ.dms[0])}d{int(abs(timing_DECJ.dms[1]))}m{round(abs(timing_DECJ.dms[2]), 3)}s")
         y = (Angle(y_values, unit=u.degree) - ref_DECJ).dms[2] * 1000.0
         y_timing = (timing_DECJ - ref_DECJ).dms[2] * 1000.0
         y_timing_error = Angle(timing_astrometric_data['dec_te'], unit=u.degree).dms[2] * 1000.0
@@ -247,15 +248,18 @@ def plot_contour(df, best_sol, timing_astrometric_data, tm, x_label, y_label, ax
 
 #    ax.set_title(f'{x_col} vs {y_col} with {w_col} as color')
 
+    return
+
 
 if __name__ == "__main__":
 
 #    PSR_name: str = "J0030+0451"
 #    PSR_name: str = "J1730-2304"
 #    PSR_name: str = "J1640+2224"
+    PSR_name: str = "J1918-0642"
 #    PSR_name: str = "J2010-1323"
 #    PSR_name: str = "J2145-0750"
-    PSR_name: str = "J2317+1439"
+#    PSR_name: str = "J2317+1439"
     posteriors_file: str = f"./results/timing_posteriors_frame_tie/{PSR_name}_consolidated_timing_posteriors.pkl"
     float_posteriors_file: str = f"./results/timing_posteriors_frame_tie/{PSR_name}_consolidated_timing_posteriors_floats.pkl"
 
@@ -286,8 +290,9 @@ if __name__ == "__main__":
     # Create subplots
     sns.set_context('paper')
     sns.set_style('ticks')
-    sns.set(font_scale=5.0)
+    sns.set(font_scale=4.5)
     fig, axs = plt.subplots(4, 4, figsize=(36, 30), gridspec_kw = {'wspace':0.1, 'hspace':0.1})
+    fig.tight_layout()
 #    fig.suptitle(PSR_name)
 
     # Store contour plots for color normalization
@@ -335,6 +340,5 @@ if __name__ == "__main__":
 #    cax = fig.add_axes([0.75, 0.4, 0.02, 0.4])
 #    fig.colorbar(colorbars[0], cax=cax)
 
-#    plt.tight_layout()
     plt.savefig("./figures/corner_plot_" + PSR_name + "_nolog.pdf")
     plt.show()

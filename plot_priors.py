@@ -54,7 +54,7 @@ ax_marginal_y.sharey(ax_main)
 
 # Plot contour plot on main axes
 contour = ax_main.contourf(X, Y, joint_pdf, cmap="viridis", levels=10, zorder=0)
-plt.colorbar(contour, ax=ax_main, label='Normalized Probability Density', location="left", pad=-0.15,
+plt.colorbar(contour, ax=ax_main, label='PDF', location="left", pad=-0.15,
              anchor=(-2.5, 0.5))
 ax_main.set_xlabel(f"$\\alpha - $ {ref_RAJ}")
 

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
 import seaborn as sns
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -187,7 +188,7 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
 
         # Plot contour plot on main axes
         contour = ax_main.contourf(X, Y, joint_pdf, cmap="viridis", zorder=0)
-        plt.colorbar(contour, ax=ax_main, label='Normalized Probability Density', location="left", pad=-0.15,
+        plt.colorbar(contour, ax=ax_main, label='PDF', location="left", pad=-0.15,
                      anchor=(-2.0, 0.5))
         ax_main.set_xlabel("$\mu_{\\alpha^{*}} = \mu_{\\alpha} \cos(\delta)$")
         ax_main.set_ylabel("$\mu_{\delta}$")
@@ -201,6 +202,9 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
         ax_marginal_x.set_xlim(ax_main.get_xlim())
         ax_marginal_x.set_ylim(0, np.max(PMRA_pdf) * 1.1)
         ax_marginal_x.set_xticks([])
+        ax_marginal_x.tick_params(left=False)  # remove the ticks
+        ax_marginal_x.set(yticklabels=[])
+
         #    ax_marginal_x.set_title('PDF of X')
 
         # Plot marginal distribution for Y on bottom left subplot
@@ -208,6 +212,8 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
         ax_marginal_y.set_ylim(ax_main.get_ylim())
         ax_marginal_y.set_xlim(0, np.max(PMDEC_pdf) * 1.1)
         ax_marginal_y.set_yticks([])
+        ax_marginal_y.tick_params(bottom=False)  # remove the ticks
+        ax_marginal_y.set(xticklabels=[])
         #    ax_marginal_y.set_title('PDF of Y')
 
         # Remove unnecessary spines
@@ -243,7 +249,7 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
         # Adjust layout and show plot
         plt.suptitle(PSR_name)
         plt.tight_layout()
-        plt.savefig("./results/frame_tie/" + PSR_name + "_PM.png", bbox_inches='tight')
+        plt.savefig("./results/frame_tie/" + PSR_name + "_PM.pdf", bbox_inches='tight')
         plt.show()
 
 #    plot_overlap("PM", DECJ_values, timing_DECJ, VLBI_DECJ, fig, 1, 2)
@@ -287,13 +293,14 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
 
         # Overlap
         ax.axvspan(VLBI_PX_x0 - factor * VLBI_PX_uL, VLBI_PX_x0 + factor * VLBI_PX_uR, facecolor='none', edgecolor='gray', hatch='//', linewidth=0.0, zorder=0, label="Overlap")
-
-        from matplotlib.patches import Patch
+        ax.tick_params(left=False)  # remove the ticks
+        ax.set(yticklabels=[])
         hatch_patch = Patch(facecolor='none', edgecolor='gray', hatch='//', label='Overlap region')
         ax.legend(handles=[hatch_patch])
 
 
         ax.set_xlabel("$\\varpi [\mathrm{mas}]$")
+        ax.set_ylabel("PDF")
         ax.set_ylim([0, ax.get_ylim()[-1]])
         plt.legend()
         plt.grid(zorder=0)
@@ -322,8 +329,8 @@ def find_solutions(PSR_name, VLBI_data, timing_data, factor: int = 3, grid_num: 
 
 if __name__ == "__main__":
 
-    PSR_name: str = sys.argv[1]
-#    PSR_name: str = "J2145-0750"
+#    PSR_name: str = sys.argv[1]
+    PSR_name: str = "J2145-0750"
 
     # File containing the timing and VLBI astrometric VLBI_data
     VLBI_astrometric_data = pd.read_csv("./data/frame_tied_vlbi_astrometric_data.csv", index_col=0, header=0)
@@ -333,7 +340,7 @@ if __name__ == "__main__":
     print(f"Finding the possible timing solutions for {PSR_name}")
 
     # FIND THE OVERLAP BETWEEN THE TIMING AND V LBI SOLUTIONS
-    solutions = find_solutions(PSR_name, VLBI_astrometric_data, timing_astrometric_data, grid_num=10, plot=False)
+    solutions = find_solutions(PSR_name, VLBI_astrometric_data, timing_astrometric_data, grid_num=100, plot=True)
 
     if solutions:
         overlap_df = pd.DataFrame(data=solutions, columns=["RA", "DEC", "PX", "PM"])
@@ -341,4 +348,4 @@ if __name__ == "__main__":
         overlap_df = overlap_df.drop(columns=['PM'])
         overlap_df['POSEPOCH'] = timing_astrometric_data.loc[PSR_name, "epoch_t"]
 #            overlap_df.to_pickle(f"./results/frame_tie/{PSR_name}_overlap_frame_tie.pkl")
-        overlap_df.to_csv(f"./results/frame_tie/{PSR_name}_overlap_frame_tie.txt", sep=" ", header=True, index_label="ArrayTaskID")
+#        overlap_df.to_csv(f"./results/frame_tie/{PSR_name}_overlap_frame_tie.txt", sep=" ", header=True, index_label="ArrayTaskID")
