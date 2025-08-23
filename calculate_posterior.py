@@ -89,6 +89,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
         newmodel_with_noise = noise_utils.add_noise_to_model(newmodel_eq, save_corner=False, base_dir=chains_dir)
         final_fit = pint.fitter.DownhillGLSFitter(toas, newmodel_with_noise)
         final_fit.fit_toas()
+        final_fit_model = final_fit.model
         final_fit_resids = final_fit.resids
 
     else:
