@@ -138,6 +138,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
             return final_fit.resids.lnlikelihood()
 
     # Get the new residuals
+    print("Calculating the new residuals")
     new_res_avg_dict = final_fit.resids.ecorr_average(use_noise_model=True)
     new_res_avg = new_res_avg_dict['time_resids'].to(u.us).value
     new_res_avg_errs = new_res_avg_dict['errors'].to(u.us).value
@@ -215,7 +216,7 @@ if __name__ == "__main__":
 
     # Calculate the posterior
     posterior, residuals_diff = calculate_post(PSR_name, timing_solution, timfile, parfile, VLBI_astrometric_data_file, resume=True, plot=False)
-    print("Posterior calculated. Now saving it...")
+    print("Posterior and new residuals calculated. Now saving them...")
 
     # Save the timing solution with its posterior
     results_np = np.asarray([idx, POSEPOCH, RAJ, DECJ, PX, PMRA, PMDEC, posterior])
