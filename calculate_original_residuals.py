@@ -4,7 +4,7 @@ import sys
 from astropy.time import Time
 from pint.models import get_model
 from pint.toa import get_TOAs
-
+import pint.fitter
 from VLBI_utils import epoch_scrunch
 from uncertainties import unumpy
 import astropy.units as u
