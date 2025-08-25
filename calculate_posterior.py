@@ -141,7 +141,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
     new_res = unumpy.uarray(new_res_avg_residuals, maxpost_avg_errors)
 
     # Take the difference in the residuals
-    ng15_res = np.load(posteriors_dir + "/ng15_res.npy")
+    ng15_res = np.load(posteriors_dir + "/ng15_res.npy", allow_pickle=True)
     res_diff = ng15_res - new_res
 
 
