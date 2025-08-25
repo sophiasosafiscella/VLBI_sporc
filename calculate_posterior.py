@@ -189,7 +189,7 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
         plt.savefig("./results/new_fits/" + PSR_name + "/" + str(timing_solution.Index) + "_post.png")
         plt.show()
 
-    return posterior, res_diff
+    return posterior, res_diff, new_res_epochs
 
 
 if __name__ == "__main__":
@@ -216,11 +216,21 @@ if __name__ == "__main__":
     parfile: str = glob.glob(f"./data/NG_15yr_dataset/par/{PSR_name}_PINT*par")[0]
 
     # Calculate the posterior
-    posterior, residuals_diff = calculate_post(PSR_name, timing_solution, timfile, parfile, VLBI_astrometric_data_file, resume=True, plot=False)
+    posterior, residuals_diff, res_epochs = calculate_post(PSR_name, timing_solution, timfile, parfile, VLBI_astrometric_data_file, resume=True, plot=False)
     print("Posterior and new residuals calculated. Now saving them...")
 
     # Save the timing solution with its posterior
-    results_np = np.asarray([idx, POSEPOCH, RAJ, DECJ, PX, PMRA, PMDEC, posterior])
-    np.save(posteriors_dir + "/" + str(idx) + "_posterior.npy", results_np)
-    np.save(posteriors_dir + "/" + str(idx) + "_residuals_diff.npy", residuals_diff)
+    results_df = pd.DataFrame({
+        'idx': [idx],
+        'POSEPOCH': [POSEPOCH],
+        'RAJ': [RAJ],
+        'DECJ': [DECJ],
+        'PX': [PX],
+        'PMRA': [PMRA],
+        'PMDEC': [PMDEC],
+        'posterior': [posterior],
+        'residuals_diff': [residuals_diff],
+        'res_epochs': [res_epochs]
+    })
+    results_df.to_pickle(posteriors_dir + "/" + str(idx) + "_results.pkl")
     print("Posterior saved. End of calculate_posterior.py")
