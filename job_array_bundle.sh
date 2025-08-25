@@ -27,11 +27,12 @@ cat <<EOF > "$job_script"
 #!/bin/bash -l
 
 #SBATCH --job-name=VLBI         # Name of your job
-#SBATCH --account=vlbi          # Your Slurm account
-#SBATCH --partition=tier3       # Run on tier3
+#SBATCH --account=rc-onboard
+#SBATCH --partition=interactive
+#SBATCH --qos=qos_interactive
+#SBATCH --time=0-12:00:00
 #SBATCH --output=%x_%A_%a.out   # Output file
 #SBATCH --error=%x_%A_%a.err    # Error file
-#SBATCH --time=0-20:00:00       # 20-hour time limit
 #SBATCH --ntasks=1              # 1 task per job
 #SBATCH --mem-per-cpu=10g       # 10GB RAM per CPU
 #SBATCH --array=0-$((num_jobs - 1))  # Array size
