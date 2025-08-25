@@ -88,13 +88,13 @@ for i in range(n_freqs):
     weightedmean_arr[i], std_dev_arr[i] = weighted_moments(series=powers_arr[:, i], weights=posteriors_arr)
 
 # Plot the results
-fig, axs = plt.subplots(nrows=1, ncols=1, figsize=(10, 14)) #, gridspec_kw = {'wspace':0, 'hspace':0})
+fig, axs = plt.subplots(nrows=1, ncols=1) #, gridspec_kw = {'wspace':0, 'hspace':0})
 axs.plot(frequencies, weightedmean_arr)
 axs.axvline(x=1.0/((1 * u.yr).to(u.day)).value, color='C1', linestyle='--', lw=2.0, label="$(\mathrm{1~year})^{-1}$")
 axs.axvline(x=1.0/((0.5 * u.yr).to(u.day)).value, color='C2', linestyle='--', lw=2.0, label="$(\mathrm{6~months})^{-1}$")
 axs.set_xscale('log')
 axs.set_yscale('log')
-axs.set_xlabel('Frequency [1/day]')
+axs.set_xlabel('Log(Frequency) [1/day]')
 axs.set_ylabel('Log(Power) [$\mathrm{\mu s^2}$/day]')
 axs.legend(loc='best')
 axs.grid()
