@@ -45,6 +45,7 @@ PSR_name: str = sys.argv[1]
 results_dir: str = f"./results/timing_posteriors_frame_tie/{PSR_name}"
 results_files = glob(f"{results_dir}/*results.npy")
 n_timing_solutions = len(results_files)
+print("Number of timing solutions: " + str(n_timing_solutions))
 
 # Array set to zero but to be replaced with the posteriors
 posteriors_arr = np.zeros(n_timing_solutions, dtype=float)
@@ -60,7 +61,7 @@ frequencies, powers = LombScargle(epochs * u.day, res_diff_nominal_values * u.us
 powers_arr = np.empty((n_timing_solutions, len(powers)), dtype=float)
 n_freqs = len(frequencies)
 
-for i, file in enumerate(results_files):
+for i, file in tqdm(enumerate(results_files)):
 
     # Extract results
     results = pd.read_pickle(file)
