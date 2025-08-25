@@ -84,13 +84,14 @@ def calculate_post(PSR_name: str, timing_solution, timfile: str, parfile: str, V
 #    eq_timing_model.change_posepoch(original_epoch)
 
     if os.path.exists(new_par_file) and resume:
-        newmodel_ec = get_model(new_par_file)  # Ecliptical coordiantes
-        newmodel_eq = ec_timing_model.as_ICRS(epoch=newmodel_ec.POSEPOCH.value)
-        newmodel_with_noise = noise_utils.add_noise_to_model(newmodel_eq, save_corner=False, base_dir=chains_dir)
-        final_fit = pint.fitter.DownhillGLSFitter(toas, newmodel_with_noise)
-        final_fit.fit_toas()
-        final_fit_model = final_fit.model
-        final_fit_resids = final_fit.resids
+        final_fit_model = get_model(new_par_file)  # Ecliptical coordiantes
+        final_fit_resids = pint.residuals.Residuals(toas=toas, model=final_fit_model)
+        print("New model loaded from file")
+#        newmodel_eq = ec_timing_model.as_ICRS(epoch=newmodel_ec.POSEPOCH.value)
+#        newmodel_with_noise = noise_utils.add_noise_to_model(newmodel_eq, save_corner=False, base_dir=chains_dir)
+#        final_fit = pint.fitter.DownhillGLSFitter(toas, newmodel_with_noise)
+#        final_fit.fit_toas()
+#        final_fit_model = final_fit.model
 
     else:
         # Perform initial fit
