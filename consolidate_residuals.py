@@ -7,6 +7,7 @@ import pandas as pd
 from glob import glob
 import sys
 from tqdm import tqdm
+import seaborn as sns
 
 '''
 Return weighted sample mean and std
@@ -87,7 +88,10 @@ std_dev_arr = np.empty(n_freqs, dtype=float)
 for i in range(n_freqs):
     weightedmean_arr[i], std_dev_arr[i] = weighted_moments(series=powers_arr[:, i], weights=posteriors_arr)
 
+frequencies = [x.value for x in frequencies]
+
 # Plot the results
+sns.set_context("paper")
 fig, axs = plt.subplots(nrows=1, ncols=1) #, gridspec_kw = {'wspace':0, 'hspace':0})
 axs.plot(frequencies, weightedmean_arr)
 axs.fill_between(frequencies, weightedmean_arr-std_dev_arr, weightedmean_arr+std_dev_arr, alpha = 0.5)
