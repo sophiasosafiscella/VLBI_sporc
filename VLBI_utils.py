@@ -171,6 +171,8 @@ def calculate_lnprior(timing_model, VLBI_data_file, PSR_name: str) -> float:
     print("PM_prior = " + str(PM_prior))
     print("PX_prior = " + str(PX_prior))
 
+    if any(x <= 0 for x in [RAJ_prior, DECJ_prior, PM_prior, PX_prior]):
+        return 0.0
     return ln(RAJ_prior) + ln(DECJ_prior) + ln(PM_prior) + ln(PX_prior)
 
 
