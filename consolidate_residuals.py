@@ -90,6 +90,9 @@ for i in range(n_freqs):
 
 frequencies = [x.value for x in frequencies]
 
+# Save the results to a pickle file
+pd.DataFrame({'frequencies':frequencies, 'weightedmean':weightedmean_arr, 'std_dev':std_dev_arr}).to_pickle(results_dir + f"/{PSR_name}_weighted_periodogram.pkl")
+
 # Plot the results
 sns.set_context("paper")
 fig, axs = plt.subplots(nrows=1, ncols=1) #, gridspec_kw = {'wspace':0, 'hspace':0})
