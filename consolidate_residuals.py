@@ -8,7 +8,7 @@ from glob import glob
 import sys
 from tqdm import tqdm
 import seaborn as sns
-
+import os
 '''
 Return weighted sample mean and std
 http://en.wikipedia.org/wiki/Weighted_mean#Weighted_sample_variance
@@ -45,53 +45,64 @@ def weighted_median(series, weights):
 PSR_name: str = sys.argv[1]
 results_dir: str = f"./results/timing_posteriors_frame_tie/{PSR_name}"
 results_files = glob(f"{results_dir}/*results.pkl")
+pkl_file = results_dir + f"/{PSR_name}_weighted_periodogram.pkl"
 n_timing_solutions = len(results_files)
 print("Number of timing solutions: " + str(n_timing_solutions))
 
-# Array set to zero but to be replaced with the posteriors
-posteriors_arr = np.zeros(n_timing_solutions, dtype=float)
+if not os.path.exists(pkl_file):
+    print("Calculating weighted periodogram")
 
-# Try the first file:
-results = pd.read_pickle(results_files[0:1][0])
-res_diffs = results.residuals_diff[0]
-res_diff_nominal_values = np.asarray([x.nominal_value for x in res_diffs])
-epochs = results.res_epochs[0]
+    # Array set to zero but to be replaced with the posteriors
+    posteriors_arr = np.zeros(n_timing_solutions, dtype=float)
 
-# Lomb-Scargle Periodogram
-frequencies, powers = LombScargle(epochs * u.day, res_diff_nominal_values * u.us).autopower()
-powers_arr = np.empty((n_timing_solutions, len(powers)), dtype=float)
-n_freqs = len(frequencies)
-print("Number of frequencies = " + str(n_freqs))
-
-for i, file in tqdm(enumerate(results_files)):
-
-    # Extract results
-    results = pd.read_pickle(file)
+    # Try the first file:
+    results = pd.read_pickle(results_files[0:1][0])
     res_diffs = results.residuals_diff[0]
     res_diff_nominal_values = np.asarray([x.nominal_value for x in res_diffs])
     epochs = results.res_epochs[0]
-    posteriors_arr[i] = results.posterior[0]
 
     # Lomb-Scargle Periodogram
-    freqs, powers_arr[i, :] = LombScargle(epochs * u.day, res_diff_nominal_values * u.us).autopower()
-    if len(freqs) != n_freqs:
-        sys.exit("Error in the number of frequencies")
+    frequencies, powers = LombScargle(epochs * u.day, res_diff_nominal_values * u.us).autopower()
+    powers_arr = np.empty((n_timing_solutions, len(powers)), dtype=float)
+    n_freqs = len(frequencies)
+    print("Number of frequencies = " + str(n_freqs))
 
-# Normalize the posteriors
-posteriors_arr /= np.amax(posteriors_arr)
-print("Normalized posteriors: " + str(posteriors_arr))
+    for i, file in tqdm(enumerate(results_files)):
 
-# Calculate the weighted mean of the periodograms per frequency
-weightedmean_arr = np.empty(n_freqs, dtype=float)
-std_dev_arr = np.empty(n_freqs, dtype=float)
+        # Extract results
+        results = pd.read_pickle(file)
+        res_diffs = results.residuals_diff[0]
+        res_diff_nominal_values = np.asarray([x.nominal_value for x in res_diffs])
+        epochs = results.res_epochs[0]
+        posteriors_arr[i] = results.posterior[0]
 
-for i in range(n_freqs):
-    weightedmean_arr[i], std_dev_arr[i] = weighted_moments(series=powers_arr[:, i], weights=posteriors_arr)
+        # Lomb-Scargle Periodogram
+        freqs, powers_arr[i, :] = LombScargle(epochs * u.day, res_diff_nominal_values * u.us).autopower()
+        if len(freqs) != n_freqs:
+            sys.exit("Error in the number of frequencies")
 
-frequencies = [x.value for x in frequencies]
+    # Normalize the posteriors
+    posteriors_arr /= np.amax(posteriors_arr)
+    print("Normalized posteriors: " + str(posteriors_arr))
 
-# Save the results to a pickle file
-pd.DataFrame({'frequencies':frequencies, 'weightedmean':weightedmean_arr, 'std_dev':std_dev_arr}).to_pickle(results_dir + f"/{PSR_name}_weighted_periodogram.pkl")
+    # Calculate the weighted mean of the periodograms per frequency
+    weightedmean_arr = np.empty(n_freqs, dtype=float)
+    std_dev_arr = np.empty(n_freqs, dtype=float)
+
+    for i in range(n_freqs):
+        weightedmean_arr[i], std_dev_arr[i] = weighted_moments(series=powers_arr[:, i], weights=posteriors_arr)
+
+    frequencies = [x.value for x in frequencies]
+
+    # Save the results to a pickle file
+    pd.DataFrame({'frequencies':frequencies, 'weightedmean':weightedmean_arr, 'std_dev':std_dev_arr}).to_pickle(pkl_file)
+
+else:
+    print("Loading results from pickle file")
+    df = pd.read_pickle(pkl_file)
+    frequencies = df['frequencies']
+    weightedmean_arr = df['weightedmean']
+    std_dev_arr = df['std_dev']
 
 # Plot the results
 sns.set_context("paper")
